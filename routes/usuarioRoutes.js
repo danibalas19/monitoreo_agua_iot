@@ -4,19 +4,29 @@ import { UsuarioController } from '../controllers/usuarioController.js';
 
 const router = express.Router();
 
-// Rutas públicas (sin autenticación)
+// ========================
+// RUTAS PÚBLICAS (sin autenticación)
+// ========================
 router.post('/auth/login', UsuarioController.autenticar);
 router.post('/', UsuarioController.createUsuario); // Registro de nuevos usuarios
 
-// CRUD Usuarios (protegidas)
-router.get('/', autenticar, UsuarioController.getAllUsuarios);
-router.get('/:id', autenticar, UsuarioController.getUsuarioById);
-router.put('/:id', autenticar, UsuarioController.updateUsuario);
-router.delete('/:id', autenticar, UsuarioController.deleteUsuario);
+// ========================
+// RUTAS PROTEGIDAS - ADMIN ONLY
+// ========================
+// CRUD Usuarios (solo Admin)
+router.get('/', autenticar, autorizar(['Admin']), UsuarioController.getAllUsuarios);
+router.get('/:id', autenticar, autorizar(['Admin']), UsuarioController.getUsuarioById);
+router.put('/:id', autenticar, autorizar(['Admin']), UsuarioController.updateUsuario);
+router.delete('/:id', autenticar, autorizar(['Admin']), UsuarioController.deleteUsuario);
 
-// Rutas especiales (protegidas)
+// Rutas de gestión (solo Admin)
+router.put('/:id/desactivar', autenticar, autorizar(['Admin']), UsuarioController.desactivarUsuario);
+router.put('/:id/activar', autenticar, autorizar(['Admin']), UsuarioController.activarUsuario);
+
+// ========================
+// RUTAS PROTEGIDAS - CUALQUIER USUARIO AUTENTICADO
+// ========================
+// Cambiar contraseña propia
 router.put('/:id/cambiar-password', autenticar, UsuarioController.cambiarPassword);
-router.put('/:id/desactivar', autenticar, UsuarioController.desactivarUsuario);
-router.put('/:id/activar', autenticar, UsuarioController.activarUsuario);
 
 export default router;

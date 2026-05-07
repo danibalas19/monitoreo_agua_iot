@@ -195,6 +195,128 @@ INSERT IGNORE INTO rol (id, nombre) VALUES
 (3, 'Visualizador');
 
 # =========================
+# 9.1 PERMISOS Y ASIGNACIÓN POR ROL
+# =========================
+CREATE TABLE IF NOT EXISTS permiso (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    descripcion TEXT,
+    modulo VARCHAR(50),
+    accion VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS rol_permiso (
+    rol_id INT NOT NULL,
+    permiso_id INT NOT NULL,
+    PRIMARY KEY (rol_id, permiso_id),
+    FOREIGN KEY (rol_id) REFERENCES rol(id) ON DELETE CASCADE,
+    FOREIGN KEY (permiso_id) REFERENCES permiso(id) ON DELETE CASCADE
+);
+
+# Inserts de permisos
+INSERT IGNORE INTO permiso (nombre, descripcion, modulo, accion) VALUES 
+-- USUARIOS
+('usuario.listar', 'Ver lista de usuarios', 'usuario', 'read'),
+('usuario.ver', 'Ver detalles de usuario', 'usuario', 'read'),
+('usuario.crear', 'Crear nuevo usuario', 'usuario', 'create'),
+('usuario.editar', 'Editar usuario', 'usuario', 'update'),
+('usuario.eliminar', 'Eliminar usuario', 'usuario', 'delete'),
+('usuario.cambiar_password', 'Cambiar contraseña', 'usuario', 'update'),
+('usuario.asignar_rol', 'Asignar roles a usuario', 'usuario', 'update'),
+
+-- JAGUEY
+('jaguey.listar', 'Ver lista de jagueys', 'jaguey', 'read'),
+('jaguey.ver', 'Ver detalles de jaguey', 'jaguey', 'read'),
+('jaguey.crear', 'Crear jaguey', 'jaguey', 'create'),
+('jaguey.editar', 'Editar jaguey', 'jaguey', 'update'),
+('jaguey.eliminar', 'Eliminar jaguey', 'jaguey', 'delete'),
+('jaguey.ver_stats', 'Ver estadísticas de jaguey', 'jaguey', 'read'),
+
+-- DISPOSITIVOS
+('dispositivo.listar', 'Ver lista de dispositivos', 'dispositivo', 'read'),
+('dispositivo.ver', 'Ver detalles de dispositivo', 'dispositivo', 'read'),
+('dispositivo.crear', 'Crear dispositivo', 'dispositivo', 'create'),
+('dispositivo.editar', 'Editar dispositivo', 'dispositivo', 'update'),
+('dispositivo.eliminar', 'Eliminar dispositivo', 'dispositivo', 'delete'),
+('dispositivo.conectados', 'Ver dispositivos conectados', 'dispositivo', 'read'),
+('dispositivo.estado_conectividad', 'Actualizar estado de conectividad', 'dispositivo', 'update'),
+
+-- SENSORES
+('sensor.listar', 'Ver lista de sensores', 'sensor', 'read'),
+('sensor.ver', 'Ver detalles de sensor', 'sensor', 'read'),
+('sensor.crear', 'Crear sensor', 'sensor', 'create'),
+('sensor.editar', 'Editar sensor', 'sensor', 'update'),
+('sensor.eliminar', 'Eliminar sensor', 'sensor', 'delete'),
+('sensor.activar', 'Activar sensor', 'sensor', 'update'),
+('sensor.desactivar', 'Desactivar sensor', 'sensor', 'update'),
+
+-- LECTURAS
+('lectura.listar', 'Ver lecturas', 'lectura', 'read'),
+('lectura.ver', 'Ver detalle de lectura', 'lectura', 'read'),
+('lectura.crear', 'Crear lectura', 'lectura', 'create'),
+('lectura.crear_lote', 'Crear múltiples lecturas', 'lectura', 'create'),
+('lectura.editar', 'Editar lectura', 'lectura', 'update'),
+('lectura.eliminar', 'Eliminar lectura', 'lectura', 'delete'),
+('lectura.limpiar', 'Limpiar lecturas antiguas', 'lectura', 'delete'),
+
+-- ACTUADORES
+('actuador.listar', 'Ver lista de actuadores', 'actuador', 'read'),
+('actuador.ver', 'Ver detalles de actuador', 'actuador', 'read'),
+('actuador.crear', 'Crear actuador', 'actuador', 'create'),
+('actuador.editar', 'Editar actuador', 'actuador', 'update'),
+('actuador.eliminar', 'Eliminar actuador', 'actuador', 'delete'),
+('actuador.activar', 'Activar actuador', 'actuador', 'update'),
+('actuador.desactivar', 'Desactivar actuador', 'actuador', 'update'),
+('actuador.cambiar_estado', 'Cambiar estado de actuador', 'actuador', 'update'),
+
+-- COMANDOS REMOTOS
+('comando.listar', 'Ver comandos remotos', 'comando', 'read'),
+('comando.ver', 'Ver detalle de comando', 'comando', 'read'),
+('comando.crear', 'Crear comando remoto', 'comando', 'create'),
+('comando.editar', 'Editar comando', 'comando', 'update'),
+('comando.eliminar', 'Eliminar comando', 'comando', 'delete'),
+('comando.cambiar_estado', 'Cambiar estado de comando', 'comando', 'update'),
+('comando.historial', 'Ver historial de usuario', 'comando', 'read'),
+
+-- ALERTAS
+('alerta.listar', 'Ver alertas', 'alerta', 'read'),
+('alerta.ver', 'Ver detalles de alerta', 'alerta', 'read'),
+('alerta.crear', 'Crear alerta', 'alerta', 'create'),
+('alerta.editar', 'Editar alerta', 'alerta', 'update'),
+('alerta.eliminar', 'Eliminar alerta', 'alerta', 'delete'),
+('alerta.resolver', 'Resolver alerta', 'alerta', 'update'),
+('alerta.verificar_umbrales', 'Verificar umbrales', 'alerta', 'read'),
+
+-- REPORTES
+('reporte.resumen_general', 'Ver resumen general', 'reporte', 'read'),
+('reporte.por_municipio', 'Ver reporte por municipio', 'reporte', 'read'),
+('reporte.jaguey', 'Ver reporte de jaguey', 'reporte', 'read'),
+('reporte.lecturas', 'Ver reporte de lecturas', 'reporte', 'read'),
+('reporte.alertas', 'Ver reporte de alertas', 'reporte', 'read'),
+('reporte.comandos', 'Ver reporte de comandos', 'reporte', 'read'),
+('reporte.conectividad', 'Ver reporte de conectividad', 'reporte', 'read'),
+('reporte.auditoria', 'Ver reporte de auditoría', 'reporte', 'read'),
+('reporte.exportar', 'Exportar datos', 'reporte', 'read');
+
+-- ASIGNACIÓN DE PERMISOS POR ROL
+-- ROL ADMIN: Todos los permisos
+INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
+SELECT 1, id FROM permiso;
+
+-- ROL OPERADOR: Permisos operativos (lectura completa, crear/editar registros operativos)
+INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
+SELECT 2, id FROM permiso WHERE
+  modulo IN ('usuario', 'jaguey', 'dispositivo', 'sensor', 'lectura', 'actuador', 'comando', 'alerta', 'reporte')
+  AND accion IN ('read', 'create', 'update')
+  AND nombre NOT LIKE 'usuario.%'
+  AND nombre NOT LIKE 'reporte.auditoria';
+
+-- ROL VISUALIZADOR: Solo lectura
+INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
+SELECT 3, id FROM permiso WHERE accion = 'read' AND nombre NOT LIKE 'reporte.auditoria';
+
+# =========================
 # 10. LOGS Y AUDITORÍA
 # =========================
 CREATE TABLE IF NOT EXISTS log_conectividad (

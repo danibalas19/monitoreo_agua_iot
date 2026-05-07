@@ -4,17 +4,29 @@ import { ComandoRemotoController } from '../controllers/comandoRemotoController.
 
 const router = express.Router();
 
-// CRUD Comandos Remotos (protegidas con JWT)
-router.get('/', autenticar, ComandoRemotoController.getAllComandos);
-router.get('/:id', autenticar, ComandoRemotoController.getComandoById);
-router.post('/', autenticar, ComandoRemotoController.createComando);
-router.put('/:id', autenticar, ComandoRemotoController.updateComando);
-router.delete('/:id', autenticar, ComandoRemotoController.deleteComando);
+// ========================
+// CRUD Comandos Remotos
+// ========================
+// Lectura: Admin, Operador
+router.get('/', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.getAllComandos);
+router.get('/:id', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.getComandoById);
 
-// Rutas especiales (protegidas con JWT)
-router.get('/actuador/:actuadorId', autenticar, ComandoRemotoController.getComandosByActuador);
-router.get('/pendientes/listar', autenticar, ComandoRemotoController.getComandosPendientes);
-router.put('/:id/estado', autenticar, ComandoRemotoController.updateEstadoComando);
-router.get('/usuario/:usuarioId/historial', autenticar, ComandoRemotoController.getHistorialPorUsuario);
+// Crear/Editar: Admin, Operador
+router.post('/', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.createComando);
+router.put('/:id', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.updateComando);
+
+// Eliminar: Solo Admin
+router.delete('/:id', autenticar, autorizar(['Admin']), ComandoRemotoController.deleteComando);
+
+// ========================
+// Rutas Especiales
+// ========================
+// Lectura
+router.get('/actuador/:actuadorId', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.getComandosByActuador);
+router.get('/pendientes/listar', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.getComandosPendientes);
+router.get('/usuario/:usuarioId/historial', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.getHistorialPorUsuario);
+
+// Control: Admin, Operador
+router.put('/:id/estado', autenticar, autorizar(['Admin', 'Operador']), ComandoRemotoController.updateEstadoComando);
 
 export default router;

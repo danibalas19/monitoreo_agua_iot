@@ -1,4 +1,5 @@
 import { UsuarioService } from '../services/usuarioService.js';
+import { PermisoService } from '../services/permisoService.js';
 import { asyncHandler } from '../middlewares/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
@@ -100,5 +101,83 @@ export class UsuarioController {
       message: 'Usuario activado exitosamente'
     });
     logger.info(`Usuario activado: ${usuario.nombre} (ID: ${usuario.id})`);
+  });
+
+  /**
+   * Obtiene los roles de un usuario
+   */
+  static getRolesUsuario = asyncHandler(async (req, res) => {
+    const roles = await PermisoService.getRolesByUsuario(req.params.id);
+    res.json({
+      success: true,
+      data: roles,
+      message: 'Roles obtenidos exitosamente'
+    });
+  });
+
+  /**
+   * Obtiene los permisos de un usuario (agrupados por módulo)
+   */
+  static getPermisosUsuario = asyncHandler(async (req, res) => {
+    const permisos = await PermisoService.getPermisosByUsuarioGrouped(req.params.id);
+    res.json({
+      success: true,
+      data: permisos,
+      message: 'Permisos obtenidos exitosamente'
+    });
+  });
+
+  /**
+   * Asigna un rol a un usuario
+   */
+  static asignarRol = asyncHandler(async (req, res) => {
+    const { rol_id } = req.body;
+    
+    if (!rol_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'rol_id es requerido'
+      });
+    }
+
+    await UsuarioService.asignarRoles(req.params.id, [rol_id]);
+    const usuario = await UsuarioService.getUsuarioById(req.params.id);
+    
+    res.json({
+      success: true,
+      data: usuario,
+      message: 'Rol asignado exitosamente'
+    });
+    logger.info(`Rol ${rol_id} asignado al usuario ${req.params.id}`);
+  });
+
+  /**
+   * Remueve un rol de un usuario
+   */
+  static removerRol = asyncHandler(async (req, res) => {
+    const { rol_id } = req.body;
+    
+    if (!rol_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'rol_id es requerido'
+      });
+    }
+
+    const query = `
+      DELETE FROM usuario_rol 
+      WHERE usuario_id = ? AND rol_id = ?
+    `;
+    const pool = require('../config/database.js').default;
+    await pool.query(query, [req.params.id, rol_id]);
+    
+    const usuario = await UsuarioService.getUsuarioById(req.params.id);
+    
+    res.json({
+      success: true,
+      data: usuario,
+      message: 'Rol removido exitosamente'
+    });
+    logger.info(`Rol ${rol_id} removido del usuario ${req.params.id}`);
   });
 }

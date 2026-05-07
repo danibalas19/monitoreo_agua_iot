@@ -4,17 +4,23 @@ import { ReporteController } from '../controllers/reporteController.js';
 
 const router = express.Router();
 
-// Reportes (protegidas con JWT)
-router.get('/resumen-general', autenticar, ReporteController.getResumenGeneral);
-router.get('/por-municipio', autenticar, ReporteController.getReportePorMunicipio);
-router.get('/jaguey/:jagueyId', autenticar, ReporteController.getReporteJaguey);
-router.get('/lecturas/sensor/:sensorId', autenticar, ReporteController.getReporteLecturas);
-router.get('/alertas', autenticar, ReporteController.getReporteAlertas);
-router.get('/comandos', autenticar, ReporteController.getReporteComandos);
-router.get('/conectividad', autenticar, ReporteController.getReporteConectividad);
-router.get('/auditoria', autenticar, ReporteController.getReporteAuditoria);
+// ========================
+// REPORTES (Lectura: Admin, Operador, Visualizador)
+// ========================
+router.get('/resumen-general', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.getResumenGeneral);
+router.get('/por-municipio', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.getReportePorMunicipio);
+router.get('/jaguey/:jagueyId', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.getReporteJaguey);
+router.get('/lecturas/sensor/:sensorId', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.getReporteLecturas);
+router.get('/alertas', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.getReporteAlertas);
+router.get('/comandos', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.getReporteComandos);
+router.get('/conectividad', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.getReporteConectividad);
 
-// Exportación (protegida con JWT)
-router.get('/exportar/:tipo', autenticar, ReporteController.exportarDatos);
+// Auditoría: Solo Admin
+router.get('/auditoria', autenticar, autorizar(['Admin']), ReporteController.getReporteAuditoria);
+
+// ========================
+// EXPORTACIÓN (Admin, Operador, Visualizador)
+// ========================
+router.get('/exportar/:tipo', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), ReporteController.exportarDatos);
 
 export default router;
