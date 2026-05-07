@@ -1,0 +1,27 @@
+{
+  "name": "monitoreo_agua_iot",
+  "version": "1.0.0",
+  "description": "Sistema IoT de monitoreo de agua en jagueys",
+  "license": "ISC",
+  "author": "Daniel Balasnoa",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^7.1.0",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
