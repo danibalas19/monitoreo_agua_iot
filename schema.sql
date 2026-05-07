@@ -190,9 +190,9 @@ CREATE TABLE IF NOT EXISTS usuario_rol (
 
 # Inserts de roles
 INSERT IGNORE INTO rol (id, nombre) VALUES 
-(1, 'Admin'),
-(2, 'Operador'),
-(3, 'Visualizador');
+(1, 'ADMIN'),
+(2, 'OPERADOR'),
+(3, 'VISOR');
 
 # =========================
 # 9.1 PERMISOS Y ASIGNACIÓN POR ROL
@@ -307,7 +307,7 @@ SELECT 1, id FROM permiso;
 -- ROL OPERADOR: Permisos operativos (lectura completa, crear/editar registros operativos)
 INSERT IGNORE INTO rol_permiso (rol_id, permiso_id)
 SELECT 2, id FROM permiso WHERE
-  modulo IN ('usuario', 'jaguey', 'dispositivo', 'sensor', 'lectura', 'actuador', 'comando', 'alerta', 'reporte')
+  modulo IN ('jaguey', 'dispositivo', 'sensor', 'lectura', 'actuador', 'comando', 'alerta', 'reporte')
   AND accion IN ('read', 'create', 'update')
   AND nombre NOT LIKE 'usuario.%'
   AND nombre NOT LIKE 'reporte.auditoria';
