@@ -1,4 +1,4 @@
-import { pool } from '../config/database.js';
+import pool from '../config/database.js';
 import { asyncHandler } from '../middlewares/errorHandler.js';
 import { logger } from '../utils/logger.js';
 

@@ -18,6 +18,7 @@ import actuadorRoutes from './routes/actuadorRoutes.js';
 import comandoRemotoRoutes from './routes/comandoRemotoRoutes.js';
 import usuarioRoutes from './routes/usuarioRoutes.js';
 import reporteRoutes from './routes/reporteRoutes.js';
+import tipoVariableRoutes from './routes/tipoVariableRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,7 +67,7 @@ app.use(`${apiV1}/actuadores`, actuadorRoutes);
 app.use(`${apiV1}/comandos-remotos`, comandoRemotoRoutes);
 app.use(`${apiV1}/usuarios`, usuarioRoutes);
 app.use(`${apiV1}/reportes`, reporteRoutes);
-
+app.use(`${apiV1}/tipos`, tipoVariableRoutes);
 // Ruta no encontrada
 app.use(notFoundHandler);
 
