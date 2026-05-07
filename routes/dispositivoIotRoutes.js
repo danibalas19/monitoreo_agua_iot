@@ -8,25 +8,25 @@ const router = express.Router();
 // CRUD Dispositivos
 // ========================
 // Lectura: Admin, Operador, Visualizador
-router.get('/', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), DispositivoIotController.getAllDispositivos);
-router.get('/:id', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), DispositivoIotController.getDispositivoById);
+router.get('/', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), DispositivoIotController.getAllDispositivos);
+router.get('/:id', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), DispositivoIotController.getDispositivoById);
 
 // Crear/Editar: Admin, Operador
-router.post('/', autenticar, autorizar(['Admin', 'Operador']), DispositivoIotController.createDispositivo);
-router.put('/:id', autenticar, autorizar(['Admin', 'Operador']), DispositivoIotController.updateDispositivo);
+router.post('/', autenticar, autorizar(['ADMIN', 'OPERADOR']), DispositivoIotController.createDispositivo);
+router.put('/:id', autenticar, autorizar(['ADMIN', 'OPERADOR']), DispositivoIotController.updateDispositivo);
 
 // Eliminar: Solo Admin
-router.delete('/:id', autenticar, autorizar(['Admin']), DispositivoIotController.deleteDispositivo);
+router.delete('/:id', autenticar, autorizar(['ADMIN']), DispositivoIotController.deleteDispositivo);
 
 // ========================
 // Rutas Especiales
 // ========================
 // Lectura
-router.get('/jaguey/:jagueyId', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), DispositivoIotController.getDispositivosByJaguey);
-router.get('/conectados/listar', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), DispositivoIotController.getDispositivosConectados);
-router.get('/stats/por-estado', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), DispositivoIotController.getDispositivosPorEstado);
+router.get('/jaguey/:jagueyId', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), DispositivoIotController.getDispositivosByJaguey);
+router.get('/conectados/listar', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), DispositivoIotController.getDispositivosConectados);
+router.get('/stats/por-estado', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), DispositivoIotController.getDispositivosPorEstado);
 
 // Control: Admin, Operador
-router.put('/:id/estado-conectividad', autenticar, autorizar(['Admin', 'Operador']), DispositivoIotController.updateEstadoConectividad);
+router.put('/:id/estado-conectividad', autenticar, autorizar(['ADMIN', 'OPERADOR']), DispositivoIotController.updateEstadoConectividad);
 
 export default router;

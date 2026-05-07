@@ -8,22 +8,22 @@ const router = express.Router();
 // CRUD Jagueys
 // ========================
 // Lectura: Admin, Operador, Visualizador
-router.get('/', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), JagueyController.getAllJagueys);
-router.get('/:id', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), JagueyController.getJagueyById);
+router.get('/', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), JagueyController.getAllJagueys);
+router.get('/:id', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), JagueyController.getJagueyById);
 
 // Crear/Editar: Admin
-router.post('/', autenticar, autorizar(['Admin']), JagueyController.createJaguey);
-router.put('/:id', autenticar, autorizar(['Admin']), JagueyController.updateJaguey);
+router.post('/', autenticar, autorizar(['ADMIN']), JagueyController.createJaguey);
+router.put('/:id', autenticar, autorizar(['ADMIN']), JagueyController.updateJaguey);
 
 // Eliminar: Solo Admin
-router.delete('/:id', autenticar, autorizar(['Admin']), JagueyController.deleteJaguey);
+router.delete('/:id', autenticar, autorizar(['ADMIN']), JagueyController.deleteJaguey);
 
 // ========================
 // Rutas Especiales
 // ========================
 // Lectura
-router.get('/municipio/:municipio', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), JagueyController.getJagueysByMunicipio);
-router.get('/:id/stats', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), JagueyController.getJagueyStats);
+router.get('/municipio/:municipio', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), JagueyController.getJagueysByMunicipio);
+router.get('/:id/stats', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), JagueyController.getJagueyStats);
 
 export default router;
 

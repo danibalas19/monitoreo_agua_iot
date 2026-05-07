@@ -8,25 +8,25 @@ const router = express.Router();
 // CRUD Sensores
 // ========================
 // Lectura: Admin, Operador, Visualizador
-router.get('/', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), SensorController.getAllSensores);
-router.get('/:id', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), SensorController.getSensorById);
+router.get('/', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), SensorController.getAllSensores);
+router.get('/:id', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), SensorController.getSensorById);
 
 // Crear/Editar: Admin, Operador
-router.post('/', autenticar, autorizar(['Admin', 'Operador']), SensorController.createSensor);
-router.put('/:id', autenticar, autorizar(['Admin', 'Operador']), SensorController.updateSensor);
+router.post('/', autenticar, autorizar(['ADMIN', 'OPERADOR']), SensorController.createSensor);
+router.put('/:id', autenticar, autorizar(['ADMIN', 'OPERADOR']), SensorController.updateSensor);
 
 // Eliminar: Solo Admin
-router.delete('/:id', autenticar, autorizar(['Admin']), SensorController.deleteSensor);
+router.delete('/:id', autenticar, autorizar(['ADMIN']), SensorController.deleteSensor);
 
 // ========================
 // Rutas Especiales
 // ========================
 // Lectura
-router.get('/dispositivo/:dispositivoId', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), SensorController.getSensoresByDispositivo);
-router.get('/tipo/:tipoVariableId', autenticar, autorizar(['Admin', 'Operador', 'Visualizador']), SensorController.getSensoresByTipo);
+router.get('/dispositivo/:dispositivoId', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), SensorController.getSensoresByDispositivo);
+router.get('/tipo/:tipoVariableId', autenticar, autorizar(['ADMIN', 'OPERADOR', 'VISOR']), SensorController.getSensoresByTipo);
 
 // Control: Admin, Operador
-router.put('/:id/activar', autenticar, autorizar(['Admin', 'Operador']), SensorController.activarSensor);
-router.put('/:id/desactivar', autenticar, autorizar(['Admin', 'Operador']), SensorController.desactivarSensor);
+router.put('/:id/activar', autenticar, autorizar(['ADMIN', 'OPERADOR']), SensorController.activarSensor);
+router.put('/:id/desactivar', autenticar, autorizar(['ADMIN', 'OPERADOR']), SensorController.desactivarSensor);
 
 export default router;

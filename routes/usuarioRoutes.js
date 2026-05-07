@@ -14,14 +14,14 @@ router.post('/', UsuarioController.createUsuario); // Registro de nuevos usuario
 // RUTAS PROTEGIDAS - ADMIN ONLY
 // ========================
 // CRUD Usuarios (solo Admin)
-router.get('/', autenticar, autorizar(['Admin']), UsuarioController.getAllUsuarios);
-router.get('/:id', autenticar, autorizar(['Admin']), UsuarioController.getUsuarioById);
-router.put('/:id', autenticar, autorizar(['Admin']), UsuarioController.updateUsuario);
-router.delete('/:id', autenticar, autorizar(['Admin']), UsuarioController.deleteUsuario);
+router.get('/', autenticar, autorizar(['ADMIN']), UsuarioController.getAllUsuarios);
+router.get('/:id', autenticar, autorizar(['ADMIN']), UsuarioController.getUsuarioById);
+router.put('/:id', autenticar, autorizar(['ADMIN']), UsuarioController.updateUsuario);
+router.delete('/:id', autenticar, autorizar(['ADMIN']), UsuarioController.deleteUsuario);
 
 // Rutas de gestión (solo Admin)
-router.put('/:id/desactivar', autenticar, autorizar(['Admin']), UsuarioController.desactivarUsuario);
-router.put('/:id/activar', autenticar, autorizar(['Admin']), UsuarioController.activarUsuario);
+router.put('/:id/desactivar', autenticar, autorizar(['ADMIN']), UsuarioController.desactivarUsuario);
+router.put('/:id/activar', autenticar, autorizar(['ADMIN']), UsuarioController.activarUsuario);
 
 // ========================
 // RUTAS PROTEGIDAS - CUALQUIER USUARIO AUTENTICADO
