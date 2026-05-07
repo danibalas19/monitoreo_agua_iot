@@ -2,10 +2,30 @@ import pool from '../config/database.js';
 import { logger } from '../utils/logger.js';
 
 export class SensorService {
+  static getLatestReadingFields() {
+    return `
+      (
+        SELECT ls.valor
+        FROM lectura_sensor ls
+        WHERE ls.sensor_id = s.id
+        ORDER BY ls.timestamp DESC, ls.id DESC
+        LIMIT 1
+      ) as valor_actual,
+      (
+        SELECT ls.timestamp
+        FROM lectura_sensor ls
+        WHERE ls.sensor_id = s.id
+        ORDER BY ls.timestamp DESC, ls.id DESC
+        LIMIT 1
+      ) as ultima_lectura
+    `;
+  }
+
   static async getAllSensores(filters = {}) {
     try {
       let query = `
-        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad, d.codigo as dispositivo_codigo
+        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad, d.codigo as dispositivo_codigo,
+        ${this.getLatestReadingFields()}
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
         LEFT JOIN dispositivo_iot d ON s.dispositivo_id = d.id
@@ -39,7 +59,8 @@ export class SensorService {
   static async getSensorById(id) {
     try {
       const query = `
-        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad, d.codigo as dispositivo_codigo
+        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad, d.codigo as dispositivo_codigo,
+        ${this.getLatestReadingFields()}
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
         LEFT JOIN dispositivo_iot d ON s.dispositivo_id = d.id
@@ -107,7 +128,8 @@ export class SensorService {
   static async getSensoresByDispositivo(dispositivoId) {
     try {
       const query = `
-        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad
+        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad,
+        ${this.getLatestReadingFields()}
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
         WHERE s.dispositivo_id = ?
@@ -124,7 +146,8 @@ export class SensorService {
   static async getSensoresByTipo(tipoVariableId) {
     try {
       const query = `
-        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad, d.codigo as dispositivo_codigo
+        SELECT s.*, tv.nombre as tipo_variable_nombre, tv.unidad, d.codigo as dispositivo_codigo,
+        ${this.getLatestReadingFields()}
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
         LEFT JOIN dispositivo_iot d ON s.dispositivo_id = d.id

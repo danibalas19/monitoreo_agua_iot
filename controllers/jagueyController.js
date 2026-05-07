@@ -3,6 +3,15 @@ import { asyncHandler } from '../middlewares/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
 export class JagueyController {
+  static getPublicJagueys = asyncHandler(async (req, res) => {
+    const jagueys = await JagueyService.getAllJagueys();
+    res.json({
+      success: true,
+      data: jagueys,
+      message: 'Jagueys públicos obtenidos exitosamente'
+    });
+  });
+
   static getAllJagueys = asyncHandler(async (req, res) => {
     const filters = {
       municipio: req.query.municipio,

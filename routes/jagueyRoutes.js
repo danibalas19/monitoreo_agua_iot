@@ -4,6 +4,9 @@ import { JagueyController } from '../controllers/jagueyController.js';
 
 const router = express.Router();
 
+// Vista pública: puntos del mapa sin autenticación
+router.get('/public/mapa', JagueyController.getPublicJagueys);
+
 // ========================
 // CRUD Jagueys
 // ========================

@@ -4,6 +4,40 @@ import jwt from 'jsonwebtoken';
 import { logger } from '../utils/logger.js';
 
 export class UsuarioService {
+  static async normalizarRolIds(roles = []) {
+    const valores = Array.isArray(roles) ? roles : [roles];
+    const rolIds = [];
+
+    for (const valor of valores) {
+      if (valor === undefined || valor === null || valor === '') continue;
+
+      if (typeof valor === 'number' || /^\d+$/.test(String(valor))) {
+        rolIds.push(Number(valor));
+        continue;
+      }
+
+      const nombres = String(valor)
+        .split(',')
+        .map((rol) => rol.trim())
+        .filter(Boolean);
+
+      for (const nombre of nombres) {
+        const [rows] = await pool.query(
+          'SELECT id FROM rol WHERE UPPER(nombre) = UPPER(?) LIMIT 1',
+          [nombre]
+        );
+
+        if (rows.length === 0) {
+          throw new Error(`Rol no encontrado: ${nombre}`);
+        }
+
+        rolIds.push(rows[0].id);
+      }
+    }
+
+    return [...new Set(rolIds)];
+  }
+
   static async getAllUsuarios() {
     try {
       const query = `
@@ -143,8 +177,10 @@ export class UsuarioService {
 
   static async asignarRoles(usuarioId, rolIds) {
     try {
-      for (const rolId of rolIds) {
-        const query = 'INSERT INTO usuario_rol (usuario_id, rol_id) VALUES (?, ?)';
+      const rolesNormalizados = await this.normalizarRolIds(rolIds);
+
+      for (const rolId of rolesNormalizados) {
+        const query = 'INSERT IGNORE INTO usuario_rol (usuario_id, rol_id) VALUES (?, ?)';
         await pool.query(query, [usuarioId, rolId]);
       }
       return true;
