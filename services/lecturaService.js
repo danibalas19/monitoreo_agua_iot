@@ -5,10 +5,21 @@ export class LecturaService {
   static async getAllLecturas(filters = {}) {
     try {
       let query = `
-        SELECT ls.*, s.modelo as sensor_modelo, tv.nombre as tipo_variable_nombre, tv.unidad
+        SELECT 
+          ls.*,
+          s.modelo as sensor_modelo,
+          s.dispositivo_id,
+          tv.id as tipo_variable_id,
+          tv.nombre as tipo_variable_nombre,
+          tv.unidad,
+          d.codigo as dispositivo_codigo,
+          d.jaguey_id,
+          j.nombre as jaguey_nombre
         FROM lectura_sensor ls
         LEFT JOIN sensor s ON ls.sensor_id = s.id
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
+        LEFT JOIN dispositivo_iot d ON s.dispositivo_id = d.id
+        LEFT JOIN jaguey j ON d.jaguey_id = j.id
         WHERE 1=1
       `;
       const params = [];
@@ -23,12 +34,24 @@ export class LecturaService {
         params.push(filters.estado);
       }
 
+      if (filters.tipo_variable_id) {
+        query += ' AND s.tipo_variable_id = ?';
+        params.push(filters.tipo_variable_id);
+      }
+
+      if (filters.jaguey_id) {
+        query += ' AND d.jaguey_id = ?';
+        params.push(filters.jaguey_id);
+      }
+
       if (filters.fechaInicio && filters.fechaFin) {
         query += ' AND ls.timestamp BETWEEN ? AND ?';
         params.push(filters.fechaInicio, filters.fechaFin);
       }
 
-      query += ' ORDER BY ls.timestamp DESC LIMIT 1000';
+      const limit = Number(filters.limit) || 1000;
+      query += ' ORDER BY ls.timestamp DESC LIMIT ?';
+      params.push(limit);
       const [rows] = await pool.query(query, params);
       return rows;
     } catch (error) {
@@ -63,10 +86,10 @@ export class LecturaService {
       const [result] = await pool.query(query, [
         data.sensor_id,
         data.valor,
-        data.timestamp || new Date(),
+        data.timestamp ? new Date(data.timestamp) : new Date(),
         data.estado || 'normal'
       ]);
-      return { id: result.insertId, ...data };
+      return await this.getLecturaById(result.insertId);
     } catch (error) {
       logger.error('Error al crear lectura:', error);
       throw error;

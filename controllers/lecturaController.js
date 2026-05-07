@@ -6,9 +6,12 @@ export class LecturaController {
   static getAllLecturas = asyncHandler(async (req, res) => {
     const filters = {
       sensor_id: req.query.sensor_id,
+      tipo_variable_id: req.query.tipo_variable_id,
+      jaguey_id: req.query.jaguey_id,
       estado: req.query.estado,
       fechaInicio: req.query.fecha_inicio,
-      fechaFin: req.query.fecha_fin
+      fechaFin: req.query.fecha_fin,
+      limit: req.query.limit
     };
     const lecturas = await LecturaService.getAllLecturas(filters);
     res.json({
