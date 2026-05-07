@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS lectura_sensor (
     valor FLOAT,
     timestamp DATETIME,
     estado VARCHAR(20),
+    origen ENUM('AUTOMATICA', 'MANUAL') DEFAULT 'AUTOMATICA',
     FOREIGN KEY (sensor_id) REFERENCES sensor(id)
 );
 

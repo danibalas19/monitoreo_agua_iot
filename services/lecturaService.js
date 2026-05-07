@@ -2,8 +2,35 @@ import pool from '../config/database.js';
 import { logger } from '../utils/logger.js';
 
 export class LecturaService {
+  static origenColumnReady = false;
+
+  static async ensureOrigenColumn() {
+    if (this.origenColumnReady) return;
+
+    const [columns] = await pool.query(
+      `
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'lectura_sensor'
+          AND COLUMN_NAME = 'origen'
+      `
+    );
+
+    if (columns.length === 0) {
+      await pool.query(`
+        ALTER TABLE lectura_sensor
+        ADD COLUMN origen ENUM('AUTOMATICA', 'MANUAL') DEFAULT 'AUTOMATICA'
+      `);
+    }
+
+    this.origenColumnReady = true;
+  }
+
   static async getAllLecturas(filters = {}) {
     try {
+      await this.ensureOrigenColumn();
+
       let query = `
         SELECT 
           ls.*,
@@ -62,6 +89,8 @@ export class LecturaService {
 
   static async getLecturaById(id) {
     try {
+      await this.ensureOrigenColumn();
+
       const query = `
         SELECT ls.*, s.modelo as sensor_modelo, tv.nombre as tipo_variable_nombre, tv.unidad
         FROM lectura_sensor ls
@@ -79,15 +108,18 @@ export class LecturaService {
 
   static async createLectura(data) {
     try {
+      await this.ensureOrigenColumn();
+
       const query = `
-        INSERT INTO lectura_sensor (sensor_id, valor, timestamp, estado)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO lectura_sensor (sensor_id, valor, timestamp, estado, origen)
+        VALUES (?, ?, ?, ?, ?)
       `;
       const [result] = await pool.query(query, [
         data.sensor_id,
         data.valor,
         data.timestamp ? new Date(data.timestamp) : new Date(),
-        data.estado || 'normal'
+        data.estado || 'normal',
+        data.origen === 'MANUAL' ? 'MANUAL' : 'AUTOMATICA'
       ]);
       return await this.getLecturaById(result.insertId);
     } catch (error) {
@@ -98,9 +130,11 @@ export class LecturaService {
 
   static async createMultipleLecturas(lecturas) {
     try {
+      await this.ensureOrigenColumn();
+
       const query = `
-        INSERT INTO lectura_sensor (sensor_id, valor, timestamp, estado)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO lectura_sensor (sensor_id, valor, timestamp, estado, origen)
+        VALUES (?, ?, ?, ?, ?)
       `;
       const results = [];
       for (const lectura of lecturas) {
@@ -108,7 +142,8 @@ export class LecturaService {
           lectura.sensor_id,
           lectura.valor,
           lectura.timestamp || new Date(),
-          lectura.estado || 'normal'
+          lectura.estado || 'normal',
+          lectura.origen === 'MANUAL' ? 'MANUAL' : 'AUTOMATICA'
         ]);
         results.push({ id: result.insertId, ...lectura });
       }
@@ -121,9 +156,11 @@ export class LecturaService {
 
   static async updateLectura(id, data) {
     try {
+      await this.ensureOrigenColumn();
+
       const query = `
         UPDATE lectura_sensor
-        SET sensor_id = ?, valor = ?, timestamp = ?, estado = ?
+        SET sensor_id = ?, valor = ?, timestamp = ?, estado = ?, origen = ?
         WHERE id = ?
       `;
       await pool.query(query, [
@@ -131,6 +168,7 @@ export class LecturaService {
         data.valor,
         data.timestamp,
         data.estado,
+        data.origen === 'MANUAL' ? 'MANUAL' : 'AUTOMATICA',
         id
       ]);
       return await this.getLecturaById(id);
@@ -153,6 +191,8 @@ export class LecturaService {
 
   static async getLecturasBySensor(sensorId, limit = 100) {
     try {
+      await this.ensureOrigenColumn();
+
       const query = `
         SELECT ls.*, s.modelo as sensor_modelo, tv.nombre as tipo_variable_nombre, tv.unidad
         FROM lectura_sensor ls
@@ -172,6 +212,8 @@ export class LecturaService {
 
   static async getUltimaLecturaBySensor(sensorId) {
     try {
+      await this.ensureOrigenColumn();
+
       const query = `
         SELECT ls.*, s.modelo as sensor_modelo, tv.nombre as tipo_variable_nombre, tv.unidad
         FROM lectura_sensor ls
