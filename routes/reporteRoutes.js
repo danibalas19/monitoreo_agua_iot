@@ -1,19 +1,20 @@
 import express from 'express';
+import { autenticar, autorizar } from '../middlewares/auth.js';
 import { ReporteController } from '../controllers/reporteController.js';
 
 const router = express.Router();
 
-// Reportes
-router.get('/resumen-general', ReporteController.getResumenGeneral);
-router.get('/por-municipio', ReporteController.getReportePorMunicipio);
-router.get('/jaguey/:jagueyId', ReporteController.getReporteJaguey);
-router.get('/lecturas/sensor/:sensorId', ReporteController.getReporteLecturas);
-router.get('/alertas', ReporteController.getReporteAlertas);
-router.get('/comandos', ReporteController.getReporteComandos);
-router.get('/conectividad', ReporteController.getReporteConectividad);
-router.get('/auditoria', ReporteController.getReporteAuditoria);
+// Reportes (protegidas con JWT)
+router.get('/resumen-general', autenticar, ReporteController.getResumenGeneral);
+router.get('/por-municipio', autenticar, ReporteController.getReportePorMunicipio);
+router.get('/jaguey/:jagueyId', autenticar, ReporteController.getReporteJaguey);
+router.get('/lecturas/sensor/:sensorId', autenticar, ReporteController.getReporteLecturas);
+router.get('/alertas', autenticar, ReporteController.getReporteAlertas);
+router.get('/comandos', autenticar, ReporteController.getReporteComandos);
+router.get('/conectividad', autenticar, ReporteController.getReporteConectividad);
+router.get('/auditoria', autenticar, ReporteController.getReporteAuditoria);
 
-// Exportación
-router.get('/exportar/:tipo', ReporteController.exportarDatos);
+// Exportación (protegida con JWT)
+router.get('/exportar/:tipo', autenticar, ReporteController.exportarDatos);
 
 export default router;
