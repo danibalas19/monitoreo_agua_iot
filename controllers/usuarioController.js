@@ -83,6 +83,24 @@ export class UsuarioController {
     logger.info(`Usuario autenticado: ${result.usuario.nombre}`);
   });
 
+  static forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'email es requerido' });
+    }
+    await UsuarioService.generarTokenRecuperacion(email);
+    res.json({ success: true, message: 'Si el email existe, se ha enviado un enlace de recuperación' });
+  });
+
+  static resetPassword = asyncHandler(async (req, res) => {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'token y password son requeridos' });
+    }
+    await UsuarioService.resetPasswordWithToken(token, password);
+    res.json({ success: true, message: 'Contraseña restablecida exitosamente' });
+  });
+
   static desactivarUsuario = asyncHandler(async (req, res) => {
     const usuario = await UsuarioService.desactivarUsuario(req.params.id);
     res.json({

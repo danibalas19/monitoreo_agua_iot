@@ -9,6 +9,8 @@ const router = express.Router();
 // ========================
 router.post('/auth/login', UsuarioController.autenticar);
 router.post('/', UsuarioController.createUsuario); // Registro de nuevos usuarios
+router.post('/forgot-password', UsuarioController.forgotPassword);
+router.post('/reset-password', UsuarioController.resetPassword);
 
 // ========================
 // RUTAS PROTEGIDAS - ADMIN ONLY

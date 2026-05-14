@@ -176,6 +176,17 @@ CREATE TABLE IF NOT EXISTS usuario (
     activo BOOLEAN DEFAULT TRUE
 );
 
+-- Tabla para tokens de recuperación de contraseña
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuario(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS rol (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(50)

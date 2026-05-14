@@ -1,7 +1,9 @@
 import pool from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { logger } from '../utils/logger.js';
+import EmailService from './emailService.js';
 
 export class UsuarioService {
   static async normalizarRolIds(roles = []) {
@@ -142,7 +144,9 @@ export class UsuarioService {
 
   static async cambiarPassword(id, passwordActual, passwordNueva) {
     try {
-      const usuario = await this.getUsuarioByEmail(id);
+      // Obtener hash de contraseña por ID directamente (no exponer en getUsuarioById)
+      const [rows] = await pool.query('SELECT password_hash FROM usuario WHERE id = ?', [id]);
+      const usuario = rows[0];
       if (!usuario) {
         throw new Error('Usuario no encontrado');
       }
@@ -159,6 +163,69 @@ export class UsuarioService {
       return true;
     } catch (error) {
       logger.error(`Error al cambiar password del usuario ${id}:`, error);
+      throw error;
+    }
+  }
+
+  // Genera token de recuperación, lo guarda y envía el email
+  static async generarTokenRecuperacion(email) {
+    try {
+      const usuario = await this.getUsuarioByEmail(email);
+      if (!usuario) {
+        throw new Error('Usuario no encontrado');
+      }
+
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+      const insertQuery = `
+        INSERT INTO password_reset_tokens (usuario_id, token, expires_at, used, created_at)
+        VALUES (?, ?, ?, false, NOW())
+      `;
+      await pool.query(insertQuery, [usuario.id, token, expiresAt]);
+
+      // Enviar email
+      await EmailService.sendPasswordResetEmail(usuario.email, token);
+
+      return true;
+    } catch (error) {
+      logger.error('Error generando token de recuperación:', error);
+      throw error;
+    }
+  }
+
+  static async verificarTokenReset(token) {
+    try {
+      const [rows] = await pool.query(
+        'SELECT id, usuario_id, expires_at, used FROM password_reset_tokens WHERE token = ? LIMIT 1',
+        [token]
+      );
+      const row = rows[0];
+      if (!row) return null;
+      if (row.used) return null;
+      const expiresAt = new Date(row.expires_at);
+      if (expiresAt < new Date()) return null;
+      return row;
+    } catch (error) {
+      logger.error('Error verificando token de reset:', error);
+      throw error;
+    }
+  }
+
+  static async resetPasswordWithToken(token, nuevaPassword) {
+    try {
+      const tokenRow = await this.verificarTokenReset(token);
+      if (!tokenRow) {
+        throw new Error('Token inválido o expirado');
+      }
+
+      const passwordHash = await bcrypt.hash(nuevaPassword, 10);
+      await pool.query('UPDATE usuario SET password_hash = ? WHERE id = ?', [passwordHash, tokenRow.usuario_id]);
+      await pool.query('UPDATE password_reset_tokens SET used = true WHERE id = ?', [tokenRow.id]);
+
+      return true;
+    } catch (error) {
+      logger.error('Error reseteando password con token:', error);
       throw error;
     }
   }
