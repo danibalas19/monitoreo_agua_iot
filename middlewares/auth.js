@@ -13,7 +13,7 @@ export const autenticar = (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: 'Token no proporcionado',
+        message: 'Token no proporcionado',  
         code: 'NO_TOKEN'
       });
     }

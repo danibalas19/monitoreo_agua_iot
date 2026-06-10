@@ -9,7 +9,7 @@ export class ActuadorService {
         FROM actuador a
         LEFT JOIN dispositivo_iot d ON a.dispositivo_id = d.id
         LEFT JOIN estado_actuador ea ON a.estado_actual = ea.id
-        WHERE 1=1
+        WHERE a.activo = TRUE
       `;
       const params = [];
 
@@ -38,9 +38,9 @@ export class ActuadorService {
         FROM actuador a
         LEFT JOIN dispositivo_iot d ON a.dispositivo_id = d.id
         LEFT JOIN estado_actuador ea ON a.estado_actual = ea.id
-        WHERE a.id = ?
+        WHERE a.id = ? AND a.activo = TRUE
       `;
-      const [rows] = await pool.query(query, [id]);
+      const [rows] = await pool.query(query, [id, id]);
       return rows[0] || null;
     } catch (error) {
       logger.error(`Error al obtener actuador ${id}:`, error);
@@ -51,13 +51,14 @@ export class ActuadorService {
   static async createActuador(data) {
     try {
       const query = `
-        INSERT INTO actuador (dispositivo_id, tipo, estado_actual)
-        VALUES (?, ?, ?)
+        INSERT INTO actuador (dispositivo_id, tipo, estado_actual, activo)
+        VALUES (?, ?, ?, ?)
       `;
       const [result] = await pool.query(query, [
         data.dispositivo_id,
         data.tipo,
-        data.estado_actual || 1
+        data.estado_actual || 2, // Default to 'Desactivado'
+        data.activo !== false ? true : false
       ]);
       return { id: result.insertId, ...data };
     } catch (error) {
@@ -99,7 +100,7 @@ export class ActuadorService {
 
   static async deleteActuador(id) {
     try {
-      const query = 'DELETE FROM actuador WHERE id = ?';
+      const query = 'UPDATE actuador SET activo = FALSE WHERE id = ?';
       await pool.query(query, [id]);
       return true;
     } catch (error) {
@@ -115,10 +116,10 @@ export class ActuadorService {
         FROM actuador a
         LEFT JOIN dispositivo_iot d ON a.dispositivo_id = d.id
         LEFT JOIN estado_actuador ea ON a.estado_actual = ea.id
-        WHERE a.dispositivo_id = ?
+        WHERE a.dispositivo_id = ? AND a.activo = TRUE
         ORDER BY a.tipo
       `;
-      const [rows] = await pool.query(query, [dispositivoId]);
+      const [rows] = await pool.query(query, [dispositivoId, dispositivoId]);
       return rows;
     } catch (error) {
       logger.error(`Error al obtener actuadores del dispositivo ${dispositivoId}:`, error);
@@ -134,10 +135,10 @@ export class ActuadorService {
         INNER JOIN dispositivo_iot d ON a.dispositivo_id = d.id
         INNER JOIN jaguey j ON d.jaguey_id = j.id
         LEFT JOIN estado_actuador ea ON a.estado_actual = ea.id
-        WHERE d.jaguey_id = ?
+        WHERE d.jaguey_id = ? AND a.activo = TRUE
         ORDER BY d.codigo, a.tipo
       `;
-      const [rows] = await pool.query(query, [jagueyId]);
+      const [rows] = await pool.query(query, [jagueyId, jagueyId]);
       return rows;
     } catch (error) {
       logger.error(`Error al obtener actuadores del jaguey ${jagueyId}:`, error);

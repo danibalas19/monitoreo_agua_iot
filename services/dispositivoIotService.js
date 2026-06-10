@@ -8,7 +8,7 @@ export class DispositivoIotService {
         SELECT d.*, j.nombre as jaguey_nombre
         FROM dispositivo_iot d
         LEFT JOIN jaguey j ON d.jaguey_id = j.id
-        WHERE 1=1
+        WHERE d.activo = TRUE
       `;
       const params = [];
 
@@ -36,7 +36,7 @@ export class DispositivoIotService {
         SELECT d.*, j.nombre as jaguey_nombre
         FROM dispositivo_iot d
         LEFT JOIN jaguey j ON d.jaguey_id = j.id
-        WHERE d.id = ?
+        WHERE d.id = ? AND d.activo = TRUE
       `;
       const [rows] = await pool.query(query, [id]);
       return rows[0] || null;
@@ -105,7 +105,7 @@ export class DispositivoIotService {
 
   static async deleteDispositivo(id) {
     try {
-      const query = 'DELETE FROM dispositivo_iot WHERE id = ?';
+      const query = 'UPDATE dispositivo_iot SET activo = FALSE WHERE id = ?';
       await pool.query(query, [id]);
       return true;
     } catch (error) {
@@ -120,7 +120,7 @@ export class DispositivoIotService {
         SELECT d.*, j.nombre as jaguey_nombre
         FROM dispositivo_iot d
         LEFT JOIN jaguey j ON d.jaguey_id = j.id
-        WHERE d.jaguey_id = ?
+        WHERE d.jaguey_id = ? AND d.activo = TRUE
         ORDER BY d.codigo
       `;
       const [rows] = await pool.query(query, [jagueyId]);
@@ -137,7 +137,7 @@ export class DispositivoIotService {
         SELECT d.*, j.nombre as jaguey_nombre
         FROM dispositivo_iot d
         LEFT JOIN jaguey j ON d.jaguey_id = j.id
-        WHERE d.estado_conectividad = 'conectado'
+        WHERE d.estado_conectividad = 'conectado' AND d.activo = TRUE
         ORDER BY d.ultima_conexion DESC
       `;
       const [rows] = await pool.query(query);
@@ -153,6 +153,7 @@ export class DispositivoIotService {
       const query = `
         SELECT estado_conectividad, COUNT(*) as cantidad
         FROM dispositivo_iot
+        WHERE activo = TRUE
         GROUP BY estado_conectividad
       `;
       const [rows] = await pool.query(query);

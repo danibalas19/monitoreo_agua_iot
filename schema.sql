@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS jaguey (
     longitud FLOAT,
     capacidad_m3 FLOAT,
     estado_id INT,
+    activo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (estado_id) REFERENCES estado_jaguey(id)
 );
 
@@ -56,6 +57,7 @@ CREATE TABLE IF NOT EXISTS dispositivo_iot (
     tipo VARCHAR(50),
     estado_conectividad VARCHAR(50),
     ultima_conexion DATETIME,
+    activo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (jaguey_id) REFERENCES jaguey(id)
 );
 
@@ -140,6 +142,7 @@ CREATE TABLE IF NOT EXISTS actuador (
     dispositivo_id INT,
     tipo VARCHAR(50),
     estado_actual INT,
+    activo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (dispositivo_id) REFERENCES dispositivo_iot(id),
     FOREIGN KEY (estado_actual) REFERENCES estado_actuador(id)
 );
@@ -369,4 +372,3 @@ CREATE INDEX idx_usuario_email ON usuario(email);
 CREATE INDEX idx_log_dispositivo ON log_conectividad(dispositivo_id);
 CREATE INDEX idx_auditoria_usuario ON auditoria_sistema(usuario_id);
 CREATE INDEX idx_auditoria_timestamp ON auditoria_sistema(timestamp);
-

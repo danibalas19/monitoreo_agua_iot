@@ -13,7 +13,7 @@ export class SensorService {
       ) as valor_actual,
       (
         SELECT ls.timestamp
-        FROM lectura_sensor ls
+        FROM lectura_sensor ls 
         WHERE ls.sensor_id = s.id
         ORDER BY ls.timestamp DESC, ls.id DESC
         LIMIT 1
@@ -29,7 +29,7 @@ export class SensorService {
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
         LEFT JOIN dispositivo_iot d ON s.dispositivo_id = d.id
-        WHERE 1=1
+        WHERE s.activo = TRUE
       `;
       const params = [];
 
@@ -41,11 +41,6 @@ export class SensorService {
       if (filters.tipo_variable_id) {
         query += ' AND s.tipo_variable_id = ?';
         params.push(filters.tipo_variable_id);
-      }
-
-      if (filters.activo !== undefined) {
-        query += ' AND s.activo = ?';
-        params.push(filters.activo);
       }
 
       const [rows] = await pool.query(query, params);
@@ -64,7 +59,7 @@ export class SensorService {
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
         LEFT JOIN dispositivo_iot d ON s.dispositivo_id = d.id
-        WHERE s.id = ?
+        WHERE s.id = ? AND s.activo = TRUE
       `;
       const [rows] = await pool.query(query, [id]);
       return rows[0] || null;
@@ -116,7 +111,7 @@ export class SensorService {
 
   static async deleteSensor(id) {
     try {
-      const query = 'DELETE FROM sensor WHERE id = ?';
+      const query = 'UPDATE sensor SET activo = FALSE WHERE id = ?';
       await pool.query(query, [id]);
       return true;
     } catch (error) {
@@ -132,7 +127,7 @@ export class SensorService {
         ${this.getLatestReadingFields()}
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
-        WHERE s.dispositivo_id = ?
+        WHERE s.dispositivo_id = ? AND s.activo = TRUE
         ORDER BY s.modelo
       `;
       const [rows] = await pool.query(query, [dispositivoId]);
@@ -151,7 +146,7 @@ export class SensorService {
         FROM sensor s
         LEFT JOIN tipo_variable tv ON s.tipo_variable_id = tv.id
         LEFT JOIN dispositivo_iot d ON s.dispositivo_id = d.id
-        WHERE s.tipo_variable_id = ? AND s.activo = true
+        WHERE s.tipo_variable_id = ? AND s.activo = TRUE
         ORDER BY d.codigo, s.modelo
       `;
       const [rows] = await pool.query(query, [tipoVariableId]);
@@ -164,7 +159,7 @@ export class SensorService {
 
   static async activarSensor(id) {
     try {
-      const query = 'UPDATE sensor SET activo = true WHERE id = ?';
+      const query = 'UPDATE sensor SET activo = TRUE WHERE id = ?';
       await pool.query(query, [id]);
       return await this.getSensorById(id);
     } catch (error) {
@@ -175,7 +170,7 @@ export class SensorService {
 
   static async desactivarSensor(id) {
     try {
-      const query = 'UPDATE sensor SET activo = false WHERE id = ?';
+      const query = 'UPDATE sensor SET activo = FALSE WHERE id = ?';
       await pool.query(query, [id]);
       return await this.getSensorById(id);
     } catch (error) {

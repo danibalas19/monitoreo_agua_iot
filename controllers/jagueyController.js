@@ -69,6 +69,15 @@ export class JagueyController {
     logger.info(`Jaguey eliminado (ID: ${req.params.id})`);
   });
 
+  static restoreJaguey = asyncHandler(async (req, res) => {
+    await JagueyService.restoreJaguey(req.params.id);
+    res.json({
+      success: true,
+      message: 'Jaguey restaurado exitosamente'
+    });
+    logger.info(`Jaguey restaurado (ID: ${req.params.id})`);
+  });
+
   static getJagueysByMunicipio = asyncHandler(async (req, res) => {
     const jagueys = await JagueyService.getJagueysByMunicipio(req.params.municipio);
     res.json({
