@@ -15,8 +15,8 @@
 // CONFIGURACIÓN WiFi
 // ==========================================
 // Cambiar estos valores con tus credenciales WiFi
-#define WIFI_SSID              "TuSSID"
-#define WIFI_PASSWORD          "TuContraseña"
+#define WIFI_SSID              "FLIA CUELLO PEREZ 5G"
+#define WIFI_PASSWORD          "1006889554"
 #define WIFI_MAX_ATTEMPTS      3
 #define WIFI_RETRY_DELAY       5000           // 5 segundos entre intentos
 
@@ -57,8 +57,8 @@
 #define API_ENDPOINT_COMANDOS  "/comandos-remotos"
 
 // Credenciales para autenticación en API (JWT)
-#define API_USERNAME           "dispositivo@example.com"
-#define API_PASSWORD           "contraseña_dispositivo"
+#define API_USERNAME           "danibalaspinto@gmail.com"
+#define API_PASSWORD           "Mine123"
 
 // ==========================================
 // IDENTIFICADORES DEL DISPOSITIVO

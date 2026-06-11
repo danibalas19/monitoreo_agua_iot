@@ -36,13 +36,13 @@
 #include <SPIFFS.h>
 
 // Headers del firmware
-#include "src/config/hardware.h"
-#include "src/config/credentials.h"
-#include "src/sensors/SensorController.h"
-#include "src/mqtt/MQTTManager.h"
-#include "src/api/APIClient.h"
-#include "src/utils/logger.h"
-#include "src/utils/dataFormatter.h"
+#include "config/hardware.h"
+#include "config/credentials.h"
+#include "sensors/SensorController.h"
+#include "mqtt/MQTTManager.h"
+#include "api/APIClient.h"
+#include "utils/logger.h"
+#include "utils/dataFormatter.h"
 
 // ============================================
 // VARIABLES GLOBALES

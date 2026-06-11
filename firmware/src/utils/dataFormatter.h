@@ -180,14 +180,14 @@ public:
 
     for (int i = 0; i < count; i++) {
       average.ph += readings[i].ph;
-      average.ec += readings[i].ec;
+      average.tds += readings[i].tds;
       average.turbidity += readings[i].turbidity;
       average.temperature += readings[i].temperature;
       average.level += readings[i].level;
     }
 
     average.ph /= count;
-    average.ec /= count;
+    average.tds /= count;
     average.turbidity /= count;
     average.temperature /= count;
     average.level /= count;

@@ -186,7 +186,7 @@ public:
    * @return true si se publicó exitosamente
    */
   bool publishNumeric(const char* topic, float value, uint8_t decimals = 2, boolean retain = false) {
-    String payload = String(value, decimals);
+    String payload = String(value, (unsigned int)decimals);
     return publish(topic, payload.c_str(), retain);
   }
 

@@ -23,7 +23,7 @@ private:
   HTTPClient http;
   String jwtToken;
   unsigned long lastSyncTime;
-  bool isAuthenticated;
+  bool _isAuthenticated;
 
   /**
    * Realizar petición POST para autenticación
@@ -65,7 +65,7 @@ private:
       
       if (responseDoc["success"] && responseDoc["data"]["token"]) {
         jwtToken = responseDoc["data"]["token"].as<String>();
-        isAuthenticated = true;
+        _isAuthenticated = true;
         Serial.println("[API] ✓ Autenticación exitosa");
         http.end();
         return true;
@@ -82,7 +82,7 @@ private:
 public:
   APIClient()
     : lastSyncTime(0),
-      isAuthenticated(false) {
+      _isAuthenticated(false) {
   }
 
   /**
@@ -100,7 +100,7 @@ public:
    * @return true si se envió exitosamente
    */
   bool sendSensorReading(const SensorReading& reading) {
-    if (!isAuthenticated) {
+    if (!_isAuthenticated) {
       Serial.println("[API] No autenticado. Intentando autenticar...");
       if (!authenticate()) {
         return false;
@@ -159,13 +159,6 @@ public:
     levelReading["unidad"] = "centímetros";
     levelReading["estado"] = "normal";
     levelReading["origen"] = "AUTOMATICA";
-    // Lectura de nivel
-    JsonObject levelReading = lecturas.createNestedObject();
-    levelReading["sensor_id"] = 5;
-    levelReading["tipo_variable_id"] = 1;  // Nivel
-    levelReading["valor"] = serialized(String(reading.level, 2));
-    levelReading["estado"] = "normal";
-    levelReading["origen"] = "AUTOMATICA";
     
     String payload;
     serializeJson(doc, payload);
@@ -191,7 +184,7 @@ public:
       Serial.print("[API] Error al enviar lectura. Código: ");
       Serial.println(httpResponseCode);
       if (httpResponseCode == 401) {
-        isAuthenticated = false;  // Token expiró
+        _isAuthenticated = false;  // Token expiró
       }
     }
     
@@ -206,7 +199,7 @@ public:
    * @return true si se envió exitosamente
    */
   bool sendActuatorCommand(int actuadorId, int estado) {
-    if (!isAuthenticated) {
+    if (!_isAuthenticated) {
       return false;
     }
 
@@ -238,7 +231,7 @@ public:
       Serial.print("[API] Error al enviar comando. Código: ");
       Serial.println(httpResponseCode);
       if (httpResponseCode == 401) {
-        isAuthenticated = false;
+        _isAuthenticated = false;
       }
     }
     
@@ -252,7 +245,7 @@ public:
    * @return true si se obtuvieron comandos
    */
   bool getRemoteCommands(String& jsonResponse) {
-    if (!isAuthenticated) {
+    if (!_isAuthenticated) {
       return false;
     }
 
@@ -276,7 +269,7 @@ public:
       Serial.print("[API] Error al obtener comandos. Código: ");
       Serial.println(httpResponseCode);
       if (httpResponseCode == 401) {
-        isAuthenticated = false;
+        _isAuthenticated = false;
       }
     }
     
@@ -290,7 +283,7 @@ public:
    * @return true si se obtuvo la configuración
    */
   bool getDeviceConfig(String& jsonResponse) {
-    if (!isAuthenticated) {
+    if (!_isAuthenticated) {
       return false;
     }
 
@@ -323,7 +316,7 @@ public:
    * @return true si está autenticado
    */
   bool isAuthenticated() {
-    return isAuthenticated;
+    return _isAuthenticated;
   }
 
   /**
@@ -339,7 +332,7 @@ public:
    */
   void handle() {
     // Si ha pasado mucho tiempo sin sincronizar y no está autenticado
-    if (!isAuthenticated && (millis() - lastSyncTime > 60000)) {
+    if (!_isAuthenticated && (millis() - lastSyncTime > 60000)) {
       authenticate();
     }
   }

@@ -163,9 +163,9 @@ public:
     Serial.print(reading.ph, 2);
     Serial.println(" unidades");
     
-    Serial.print("Conductividad (EC): ");
-    Serial.print(reading.ec, 2);
-    Serial.println(" µS/cm");
+    Serial.print("TDS: ");
+    Serial.print(reading.tds, 2);
+    Serial.println(" ppm");
     
     Serial.print("Turbidez: ");
     Serial.print(reading.turbidity, 2);
