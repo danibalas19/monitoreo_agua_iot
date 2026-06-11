@@ -1,0 +1,16 @@
+﻿feat(backend): Añadir firmware e integraciones en el backend
+
+Se añadió el firmware para el proyecto e integraciones relacionadas en el backend. Cambios principales:
+- Endpoints para subir, listar y desplegar firmware.
+- Gestión y almacenamiento de binarios (uploads, validaciones, metadatos).
+- Lógica y jobs para actualización OTA.
+- Actualizaciones en modelos y migraciones necesarias.
+- Scripts y documentación básica para build y despliegue del firmware.
+
+Archivos añadidos/modificados:
+- .env.example
+- routes/usuarioRoutes.js
+- services/emailService.js
+- firmware/
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

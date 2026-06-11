@@ -8,7 +8,6 @@ const router = express.Router();
 // RUTAS PÚBLICAS (sin autenticación)
 // ========================
 router.post('/auth/login', UsuarioController.autenticar);
-router.post('/', UsuarioController.createUsuario); // Registro de nuevos usuarios
 router.post('/forgot-password', UsuarioController.forgotPassword);
 router.post('/reset-password', UsuarioController.resetPassword);
 
@@ -17,6 +16,7 @@ router.post('/reset-password', UsuarioController.resetPassword);
 // ========================
 // CRUD Usuarios (solo Admin)
 router.get('/', autenticar, autorizar(['ADMIN']), UsuarioController.getAllUsuarios);
+router.post('/', autenticar, autorizar(['ADMIN']), UsuarioController.createUsuario); // Registro de nuevos usuarios (protegido)
 router.get('/:id', autenticar, autorizar(['ADMIN']), UsuarioController.getUsuarioById);
 router.put('/:id', autenticar, autorizar(['ADMIN']), UsuarioController.updateUsuario);
 router.delete('/:id', autenticar, autorizar(['ADMIN']), UsuarioController.deleteUsuario);

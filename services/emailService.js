@@ -1,44 +1,51 @@
 import nodemailer from 'nodemailer';
+import { logger } from '../utils/logger.js';
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM || 'no-reply@example.com';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-
-const transporter = nodemailer.createTransport(
-  SMTP_HOST
-    ? {
-        host: SMTP_HOST,
-        port: Number(SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-          user: SMTP_USER,
-          pass: SMTP_PASS
-        }
-      }
-    : // If no SMTP configured, use a stub that logs
-      { sendMail: (opts) => { console.log('Simulated email send', opts); return Promise.resolve(); } }
-);
-
-export default {
-  async sendPasswordResetEmail(to, token) {
-    const resetUrl = `${FRONTEND_URL.replace(/\/$/, '')}/reset-password?token=${token}`;
-    const mailOptions = {
-      from: SMTP_FROM,
-      to,
-      subject: 'Recuperación de contraseña',
-      text: `Se solicitó restablecer la contraseña. Visita: ${resetUrl}`,
-      html: `<p>Se solicitó restablecer la contraseña. Haz clic en el siguiente enlace para restablecerla (expira en 1 hora):</p><p><a href="${resetUrl}">${resetUrl}</a></p>`
-    };
-
+class EmailService {
+  static async sendPasswordResetEmail(email, token) {
     try {
+      // Verificación de variables de entorno para un mejor diagnóstico
+      if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        logger.error('Faltan variables de entorno SMTP. Asegúrate de que SMTP_HOST, SMTP_USER, y SMTP_PASS estén configuradas en el archivo .env');
+        throw new Error('El servicio de correo no está configurado correctamente en el servidor.');
+      }
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      const resetUrl = `${process.env.CORS_ORIGIN || 'http://localhost:5173'}/recuperar?token=${token}`;
+
+      const mailOptions = {
+        from: `"Sistema IoT Jagüeyes" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: 'Recuperación de Contraseña - Sistema IoT',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <h2 style="color: #1F4E79; text-align: center;">Recuperación de Contraseña</h2>
+            <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente botón para crear una nueva:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="padding: 12px 24px; background-color: #2E75B6; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Restablecer Contraseña</a>
+            </div>
+            <p style="color: #666; font-size: 14px;">Este enlace expirará en 1 hora.</p>
+            <p style="color: #666; font-size: 14px;">Si no solicitaste esto, puedes ignorar este correo de forma segura.</p>
+          </div>
+        `,
+      };
+
       await transporter.sendMail(mailOptions);
-      console.log('Password reset email sent to', to);
+      logger.info(`Correo de recuperación enviado a ${email}`);
     } catch (error) {
-      console.error('Error sending password reset email:', error);
+      logger.error('Error sending password reset email:', error);
       throw error;
     }
   }
-};
+}
+
+export default EmailService;

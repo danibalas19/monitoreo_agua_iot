@@ -1,0 +1,88 @@
+# .gitignore for ESP32 Firmware
+
+# PlatformIO
+.pio/
+.vscode/.c_cpp_properties.json
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/ipch
+
+# Build directories
+build/
+dist/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# Sensitive files (IMPORTANT!)
+src/config/credentials.h.local
+src/config/*.private.h
+*.pem
+*.key
+*.crt
+
+# Compilation
+*.elf
+*.bin
+*.hex
+.build/
+cmake_build/
+
+# Libraries (managed by platformio)
+.platformio/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv
+
+# Dependencies (optional - let platformio manage)
+# Descomment si usas git para librerías externas
+# lib/external/
+
+# Test results
+*.coverage
+.pytest_cache/
+
+# Logs
+*.log
+debug.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.#*
+
+# Node modules (if using node tools)
+node_modules/
+package-lock.json
+
+# Serial monitor logs
+monitor.log
+
+# Backup files
+*.backup
+*.orig
