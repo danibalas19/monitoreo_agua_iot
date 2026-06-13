@@ -9,6 +9,8 @@
 #define LOGGER_H
 
 #include <Arduino.h>
+#include <WiFi.h>
+#include "../sensors/SensorController.h"
 #include "../config/credentials.h"
 #include "../config/hardware.h"
 

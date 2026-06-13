@@ -20,7 +20,6 @@
 
 class APIClient {
 private:
-  HTTPClient http;
   String jwtToken;
   unsigned long lastSyncTime;
   bool _isAuthenticated;
@@ -30,6 +29,8 @@ private:
    * @return true si se obtuvo el token
    */
   bool authenticate() {
+    HTTPClient http;
+    http.setReuse(false);
     String url = String(API_BASE_URL) + "/usuarios/auth/login";
     
     DynamicJsonDocument doc(256);
@@ -47,13 +48,14 @@ private:
     }
     
     http.addHeader("Content-Type", "application/json");
+    http.addHeader("Connection", "close");
     
     int httpResponseCode = http.POST(payload);
     
     if (httpResponseCode == 200) {
       String response = http.getString();
       
-      DynamicJsonDocument responseDoc(512);
+      DynamicJsonDocument responseDoc(1024); // Aumentado para soportar el JWT completo y objeto usuario
       DeserializationError error = deserializeJson(responseDoc, response);
       
       if (error) {
@@ -73,6 +75,8 @@ private:
     } else {
       Serial.print("[API] Error de autenticación. Código: ");
       Serial.println(httpResponseCode);
+      String authError = http.getString();
+      Serial.println("[API] Detalle del error de auth: " + authError);
     }
     
     http.end();
@@ -109,7 +113,10 @@ public:
 
     String url = String(API_BASE_URL) + API_ENDPOINT_LECTURAS;
     
-    DynamicJsonDocument doc(512);
+    Serial.print("[API] URL de destino: ");
+    Serial.println(url);
+    
+    DynamicJsonDocument doc(2048); // Aumentado a 2048 bytes para asegurar que no se corte el JSON
     doc["dispositivo_id"] = DISPOSITIVO_ID;
     doc["jaguey_id"] = JAGUEY_ID;
     
@@ -118,50 +125,66 @@ public:
     
     // Lectura de pH (PH_EN)
     JsonObject phReading = lecturas.createNestedObject();
-    phReading["sensor_id"] = 1;
+    phReading["dispositivo_id"] = DISPOSITIVO_ID;
+    phReading["sensor_id"] = 10;
     phReading["tipo_variable_id"] = 3;  // pH
-    phReading["valor"] = serialized(String(reading.ph, 2));
+    phReading["valor"] = String(reading.ph, 2);
+    phReading["unidad"] = "pH";
     phReading["estado"] = "normal";
     phReading["origen"] = "AUTOMATICA";
     
+  
+
     // Lectura de TDS (sensor de conductividad/TDS)
     JsonObject tdsReading = lecturas.createNestedObject();
-    tdsReading["sensor_id"] = 2;
-    tdsReading["tipo_variable_id"] = 4;  // Conductividad/TDS
-    tdsReading["valor"] = serialized(String(reading.tds, 2));
+    tdsReading["dispositivo_id"] = DISPOSITIVO_ID;
+    tdsReading["sensor_id"] = 8;         // ID 8 = TDS Meter v1.0 en BD
+    tdsReading["tipo_variable_id"] = 4;  // VERIFICAR ESTE ID EN MYSQL (Tabla tipo_variable)
+    tdsReading["valor"] = String(reading.tds, 2);
     tdsReading["unidad"] = "ppm";
     tdsReading["estado"] = "normal";
     tdsReading["origen"] = "AUTOMATICA";
     
     // Lectura de turbidez (TURBIDEZ2)
     JsonObject turbidityReading = lecturas.createNestedObject();
-    turbidityReading["sensor_id"] = 3;
-    turbidityReading["tipo_variable_id"] = 5;  // Turbidez
-    turbidityReading["valor"] = serialized(String(reading.turbidity, 2));
+    turbidityReading["dispositivo_id"] = DISPOSITIVO_ID;
+    turbidityReading["sensor_id"] = 9;         // ID 9 = Turbidez Module en BD
+    turbidityReading["tipo_variable_id"] = 6;  // ID 6 = Turbidez en tu BD MySQL
+    turbidityReading["valor"] = String(reading.turbidity, 2);
     turbidityReading["unidad"] = "NTU";
     turbidityReading["estado"] = "normal";
     turbidityReading["origen"] = "AUTOMATICA";
     
     // Lectura de temperatura (TEMPERATURA DS18B20)
     JsonObject tempReading = lecturas.createNestedObject();
-    tempReading["sensor_id"] = 4;
-    tempReading["tipo_variable_id"] = 2;  // Temperatura
-    tempReading["valor"] = serialized(String(reading.temperature, 2));
+    tempReading["dispositivo_id"] = DISPOSITIVO_ID;
+    tempReading["sensor_id"] = 7;         // ID 7 = SEN0161 (Temperatura) en BD
+    tempReading["tipo_variable_id"] = 2;  // VERIFICAR ESTE ID EN MYSQL (Tabla tipo_variable)
+    tempReading["valor"] = String(reading.temperature, 2);
     tempReading["unidad"] = "°C";
     tempReading["estado"] = "normal";
     tempReading["origen"] = "AUTOMATICA";
     
+    /* === SENSORES DESCONECTADOS TEMPORALMENTE ===
     // Lectura de nivel/distancia (ULTRASONICO HC-SR04)
     JsonObject levelReading = lecturas.createNestedObject();
+    levelReading["dispositivo_id"] = DISPOSITIVO_ID;
     levelReading["sensor_id"] = 5;
     levelReading["tipo_variable_id"] = 1;  // Nivel
-    levelReading["valor"] = serialized(String(reading.level, 2));
-    levelReading["unidad"] = "centímetros";
+    levelReading["valor"] = String(reading.levelPercentage, 1);
+    levelReading["unidad"] = "%";
     levelReading["estado"] = "normal";
     levelReading["origen"] = "AUTOMATICA";
+    */
     
     String payload;
     serializeJson(doc, payload);
+    
+    Serial.println("[API] JSON generado a enviar:");
+    Serial.println(payload);
+    
+    HTTPClient http;
+    http.setReuse(false);
     
     if (!http.begin(url)) {
       Serial.println("[API] Error al inicializar HTTP");
@@ -170,6 +193,7 @@ public:
     
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", "Bearer " + jwtToken);
+    http.addHeader("Connection", "close");
     
     int httpResponseCode = http.POST(payload);
     
@@ -183,6 +207,8 @@ public:
     } else {
       Serial.print("[API] Error al enviar lectura. Código: ");
       Serial.println(httpResponseCode);
+      String errorResponse = http.getString();
+      Serial.println("[API] Motivo del rechazo: " + errorResponse);
       if (httpResponseCode == 401) {
         _isAuthenticated = false;  // Token expiró
       }
@@ -214,12 +240,16 @@ public:
     String payload;
     serializeJson(doc, payload);
     
+    HTTPClient http;
+    http.setReuse(false);
+    
     if (!http.begin(url)) {
       return false;
     }
     
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", "Bearer " + jwtToken);
+    http.addHeader("Connection", "close");
     
     int httpResponseCode = http.POST(payload);
     
@@ -252,11 +282,15 @@ public:
     String url = String(API_BASE_URL) + API_ENDPOINT_COMANDOS + 
                  "?dispositivo_id=" + String(DISPOSITIVO_ID);
     
+    HTTPClient http;
+    http.setReuse(false);
+    
     if (!http.begin(url)) {
       return false;
     }
     
     http.addHeader("Authorization", "Bearer " + jwtToken);
+    http.addHeader("Connection", "close");
     
     int httpResponseCode = http.GET();
     
@@ -289,11 +323,15 @@ public:
 
     String url = String(API_BASE_URL) + "/dispositivos/" + String(DISPOSITIVO_ID);
     
+    HTTPClient http;
+    http.setReuse(false);
+    
     if (!http.begin(url)) {
       return false;
     }
     
     http.addHeader("Authorization", "Bearer " + jwtToken);
+    http.addHeader("Connection", "close");
     
     int httpResponseCode = http.GET();
     

@@ -15,7 +15,7 @@
 // CONFIGURACIÓN WiFi
 // ==========================================
 // Cambiar estos valores con tus credenciales WiFi
-#define WIFI_SSID              "FLIA CUELLO PEREZ 5G"
+#define WIFI_SSID              "FLIA CUELLO PEREZ"
 #define WIFI_PASSWORD          "1006889554"
 #define WIFI_MAX_ATTEMPTS      3
 #define WIFI_RETRY_DELAY       5000           // 5 segundos entre intentos
@@ -23,7 +23,7 @@
 // ==========================================
 // CONFIGURACIÓN MQTT
 // ==========================================
-#define MQTT_BROKER            "192.168.1.100" // IP del broker MQTT (Mosquitto)
+#define MQTT_BROKER            "192.168.40.8" // IP del broker MQTT (Mosquitto)
 #define MQTT_PORT              1883            // Puerto MQTT estándar
 #define MQTT_USERNAME          ""              // Usuario MQTT (opcional)
 #define MQTT_PASSWORD          ""              // Contraseña MQTT (opcional)
@@ -51,8 +51,8 @@
 // CONFIGURACIÓN API REST
 // ==========================================
 // URL del servidor backend
-#define API_BASE_URL           "http://192.168.1.100:3000/api/v1"
-#define API_ENDPOINT_LECTURAS  "/lecturas"
+#define API_BASE_URL           "http://192.168.40.8:3000/api/v1" 
+#define API_ENDPOINT_LECTURAS  "/lecturas/lote"
 #define API_ENDPOINT_ALERTAS   "/alertas"
 #define API_ENDPOINT_COMANDOS  "/comandos-remotos"
 
@@ -66,7 +66,7 @@
 // Estos valores se deben sincronizar con la base de datos del backend
 #define DISPOSITIVO_ID         1              // ID del dispositivo en la BD
 #define DISPOSITIVO_CODIGO     "DISP-ESP32-001"
-#define JAGUEY_ID              1              // ID del jaguey en la BD
+#define JAGUEY_ID              2              // ID del jaguey en la BD
 
 // ==========================================
 // VERSIÓN Y METADATA

@@ -114,8 +114,22 @@ export class LecturaService {
         INSERT INTO lectura_sensor (sensor_id, valor, timestamp, estado, origen)
         VALUES (?, ?, ?, ?, ?)
       `;
+      
+      let sensorIdToUse = data.sensor_id;
+      
+      // Autocorrección inteligente: Buscar el sensor_id real en la BD
+      if (data.dispositivo_id && data.tipo_variable_id) {
+        const [sensorRows] = await pool.query(
+          'SELECT id FROM sensor WHERE dispositivo_id = ? AND tipo_variable_id = ? LIMIT 1',
+          [data.dispositivo_id, data.tipo_variable_id]
+        );
+        if (sensorRows.length > 0) {
+          sensorIdToUse = sensorRows[0].id;
+        }
+      }
+
       const [result] = await pool.query(query, [
-        data.sensor_id,
+        sensorIdToUse,
         data.valor,
         data.timestamp ? new Date(data.timestamp) : new Date(),
         data.estado || 'normal',
@@ -138,8 +152,21 @@ export class LecturaService {
       `;
       const results = [];
       for (const lectura of lecturas) {
+        let sensorIdToUse = lectura.sensor_id;
+        
+        // Autocorrección inteligente: Buscar el sensor_id real en la BD
+        if (lectura.dispositivo_id && lectura.tipo_variable_id) {
+          const [sensorRows] = await pool.query(
+            'SELECT id FROM sensor WHERE dispositivo_id = ? AND tipo_variable_id = ? LIMIT 1',
+            [lectura.dispositivo_id, lectura.tipo_variable_id]
+          );
+          if (sensorRows.length > 0) {
+            sensorIdToUse = sensorRows[0].id;
+          }
+        }
+
         const [result] = await pool.query(query, [
-          lectura.sensor_id,
+          sensorIdToUse,
           lectura.valor,
           lectura.timestamp || new Date(),
           lectura.estado || 'normal',

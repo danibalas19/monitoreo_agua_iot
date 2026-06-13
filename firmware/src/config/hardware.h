@@ -37,6 +37,15 @@
 #define PIN_RX                 GPIO_NUM_3     // UART RX (DEBUG)
 
 // ==========================================
+// CONFIGURACIÓN PANTALLA LCD (I2C)
+// ==========================================
+#define PIN_I2C_SDA            GPIO_NUM_21
+#define PIN_I2C_SCL            GPIO_NUM_22
+#define LCD_COLUMNS            20             // Cambiar a 16 si tu pantalla es de 16x2
+#define LCD_ROWS               4              // Cambiar a 2 si tu pantalla es de 16x2
+#define LCD_ADDRESS            0x27           // Dirección I2C (si el escáner detectó 0x3F, cámbialo aquí)
+
+// ==========================================
 // CONFIGURACIÓN ADC
 // ==========================================
 #define ADC_MAX_VALUE          4095.0         // Resolución 12-bit

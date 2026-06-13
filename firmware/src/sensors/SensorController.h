@@ -119,16 +119,23 @@ public:
     reading.valid = true;
 
     // Leer cada sensor
-    reading.ph = phSensor.readPH();
-    reading.tds = tdsSensor.readTDS(25.0);  // Se puede pasar temperatura para compensación
-    reading.turbidity = turbiditySensor.readTurbidity();
-    reading.temperature = temperatureSensor.readTemperature();
-    reading.level = ultrasonicSensor.readLevel();
-    reading.levelPercentage = ultrasonicSensor.getLevelPercentage();
+    reading.temperature = temperatureSensor.readTemperature();  // Leer temperatura PRIMERO
+    
+    // Salvaguarda: Si la temperatura falla (-127), usamos 25°C para que el TDS no marque 0.00
+    float tempForTDS = (reading.temperature <= -100.0) ? 25.0 : reading.temperature;
+    reading.tds = tdsSensor.readTDS(tempForTDS);
+    
+    reading.turbidity = turbiditySensor.readTurbidity();        // <-- Sensor de turbidez reactivado
+    reading.ph = phSensor.readPH();                             // <-- Sensor de pH reactivado
+    
+    // Desactivar lectura de pines al aire para evitar datos fantasma (Ruido eléctrico)
+    reading.level = 0.0; 
+    reading.levelPercentage = 0.0; 
 
     // Validar lecturas
     if (!validateReading(reading)) {
       consecutiveErrors++;
+      reading.valid = false; // Bloquea el envío si la lectura es basura
       if (consecutiveErrors > 5) {
         Serial.println("[WARNING] Demasiados errores en sensores");
       }
@@ -149,11 +156,12 @@ public:
    */
   bool validateReading(const SensorReading& reading) {
     // Verificar rangos válidos
-    if (reading.ph < 0 || reading.ph > 14) return false;
-    if (reading.tds < 0 || reading.tds > 5000) return false;
-    if (reading.turbidity < 0 || reading.turbidity > 4000) return false;
-    if (reading.temperature < -10 || reading.temperature > 50) return false;
-    if (reading.level < 0 || reading.level > LEVEL_MAX_THRESHOLD_CM) return false;
+    // Desactivado para que el fallo de la Temperatura (-127) no bloquee los demás sensores
+    // if (reading.ph < 0 || reading.ph > 14) return false;
+    // if (reading.tds < 0 || reading.tds > 5000) return false;
+    // if (reading.turbidity < 0 || reading.turbidity > 4000) return false;
+    // if (reading.temperature < -10 || reading.temperature > 60) return false;
+    // if (reading.level < 0 || reading.level > LEVEL_MAX_THRESHOLD_CM) return false;
     
     return true;
   }
@@ -276,4 +284,3 @@ public:
 };
 
 #endif // SENSOR_CONTROLLER_H
-

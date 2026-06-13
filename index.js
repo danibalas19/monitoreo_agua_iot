@@ -75,12 +75,12 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Iniciar servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   logger.info(`================================================`);
   logger.info(`✓ Servidor de Monitoreo de Agua IoT iniciado`);
   logger.info(`✓ Puerto: ${PORT}`);
   logger.info(`✓ Ambiente: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`✓ URL: http://localhost:${PORT}`);
+  logger.info(`✓ URL: http://0.0.0.0:${PORT}`);
   logger.info(`✓ Health Check: http://localhost:${PORT}/health`);
   logger.info(`================================================`);
 });
@@ -94,5 +94,3 @@ process.on('uncaughtException', (error) => {
   logger.error('Excepción no capturada:', error);
   process.exit(1);
 });
-
-

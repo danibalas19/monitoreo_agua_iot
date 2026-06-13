@@ -1,39 +1,11 @@
-/**
- * @file main.ino
- * @brief Programa principal para ESP32 - Monitoreo de Agua en Jagüeyes
- * @author Daniel Balasnoa
- * @version 2.0.0 - BASADO EN ESQUEMA REAL
- * 
- * Sistema completo de monitoreo de calidad y nivel de agua
- * Sensores REALES del circuito: pH, TDS, Turbidez, Temperatura, Ultrasónico
- * Comunicación: WiFi + MQTT + REST API
- * 
- * CONEXIONES REALES PCB (Basadas en esquema):
- * ============================================
- * ANALÓGICOS:
- * - PH_EN       → GPIO34 (ADC1_CH6)
- * - TURBIDEZ2   → GPIO35 (ADC1_CH7)
- * - TDS         → GPIO33 (ADC2_CH4)
- * 
- * DIGITALES:
- * - TEMPERATURA → GPIO32 (1-Wire DS18B20)
- * - ULTRASONICO TRIG → GPIO4
- * - ULTRASONICO ECHO → GPIO5
- * 
- * ACTUADORES:
- * - MIRELE 1    → GPIO12
- * - MIRELE 2    → GPIO13
- * 
- * DEBUG:
- * - LED Status  → GPIO2
- * - Botón Cfg   → GPIO0
- * - Serial TX   → GPIO1
- * - Serial RX   → GPIO3
- */
+#include <Arduino.h>
+
 
 #include <WiFi.h>
 #include <WebServer.h>
 #include <SPIFFS.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 // Headers del firmware
 #include "config/hardware.h"
@@ -52,6 +24,7 @@ SensorController sensorController;
 MQTTManager mqttManager;
 APIClient apiClient;
 WebServer webServer(80);
+LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
 
 // Timers
 unsigned long lastSensorReadTime = 0;
@@ -68,6 +41,14 @@ bool wifiConnected = false;
 bool mqttConnected = false;
 bool apiAuthenticated = false;
 bool systemHealthy = true;
+
+// ============================================
+// PROTOTIPOS DE FUNCIONES (Requerido en C++)
+// ============================================
+void processMQTTCommand(String command);
+void readAndPublishSensors();
+void activateRelay(int relayNum);
+void deactivateRelay(int relayNum);
 
 // ============================================
 // FUNCIONES DE WIFI
@@ -175,6 +156,14 @@ void processMQTTCommand(String command) {
       float value = doc["valor"] | 7.0;
       sensorController.calibratePH(value);
     } 
+    else if (cmd == "CALIBRAR_TURBIDEZ") {
+      float value = doc["valor"] | 0.0;
+      sensorController.calibrateTurbidity(value);
+    }
+    else if (cmd == "CALIBRAR_TDS") {
+      float value = doc["valor"] | 500.0;
+      sensorController.calibrateTDS(value);
+    }
     else if (cmd == "REBOOT") {
       logger.warning("Reboot solicitado");
       delay(1000);
@@ -196,6 +185,33 @@ void setupMQTT() {
       mqttConnected = false;
     }
   }
+}
+
+// ============================================
+// FUNCIONES DE PANTALLA LCD
+// ============================================
+void updateDisplay(const SensorReading& reading) {
+  lcd.clear();
+  
+  // Fila 1: pH y TDS
+  lcd.setCursor(0, 0);
+  lcd.print("pH:"); lcd.print(reading.ph, 1);
+  lcd.print(" TDS:"); lcd.print(reading.tds, 0);
+  
+  // Fila 2: Temp y Nivel
+  lcd.setCursor(0, 1);
+  lcd.print("T:"); lcd.print(reading.temperature, 1);
+  lcd.print("C Nvl:"); lcd.print(reading.levelPercentage, 0); lcd.print("%");
+  
+  #if LCD_ROWS > 2
+  // Fila 3 y 4 (Solo se mostrará si configuras la pantalla como 20x4)
+  lcd.setCursor(0, 2);
+  lcd.print("Turbidez: "); lcd.print(reading.turbidity, 1);
+  
+  lcd.setCursor(0, 3);
+  lcd.print(wifiConnected ? "WIFI:OK " : "WIFI:-- ");
+  lcd.print(mqttConnected ? "MQTT:OK" : "MQTT:--");
+  #endif
 }
 
 // ============================================
@@ -230,6 +246,9 @@ void readAndPublishSensors() {
 
   logger.info("✓ Lectura de sensores completada");
   logger.printSensorInfo(lastReading);
+  
+  // Actualizar la pantalla con los nuevos datos
+  updateDisplay(lastReading);
 
   // Publicar en MQTT
   if (mqttConnected) {
@@ -398,6 +417,41 @@ void setup() {
   logger.begin(LOG_DEBUG);
   logger.printDeviceInfo();
 
+  // Inicializar I2C y Pantalla OLED
+  // Inicializar I2C y Pantalla LCD
+  Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
+  Wire.setClock(50000); // Bajar la velocidad I2C (50kHz) para evitar caracteres basura
+  delay(200);           // Darle tiempo a la pantalla para encender correctamente eléctricamente
+  
+  // --- INICIO ESCÁNER I2C (DEBUG) ---
+  Serial.println("\n[I2C] Escaneando dispositivos I2C...");
+  byte error, address;
+  int nDevices = 0;
+  for(address = 1; address < 127; address++ ) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+    if (error == 0) {
+      Serial.print("[I2C] ✓ Dispositivo encontrado en direccion 0x");
+      if (address < 16) Serial.print("0");
+      Serial.println(address, HEX);
+      nDevices++;
+    }
+  }
+  if (nDevices == 0) {
+    Serial.println("[I2C] ✗ No se encontraron dispositivos I2C. ¡Hardware invisible!");
+  }
+  Serial.println("[I2C] Escaneo completado.\n");
+  // --- FIN ESCÁNER I2C ---
+
+  // Inicializar LCD
+  lcd.init(); // En pantallas rebeldes o lentas, iniciar dos veces limpia el chip traductor PCF8574
+  lcd.init();
+  lcd.backlight();
+  lcd.clear(); // Limpiar explícitamente cualquier garabato que haya quedado en memoria
+  lcd.setCursor(0, 0);
+  lcd.print(" INICIANDO SISTEMA..");
+  logger.info("✓ Pantalla LCD inicializada");
+
   // Inicializar SPIFFS
   if (!SPIFFS.begin(true)) {
     logger.error("Error al inicializar SPIFFS");
@@ -438,9 +492,14 @@ void loop() {
 
   // Reconectar WiFi si es necesario
   if (WiFi.status() != WL_CONNECTED) {
-    if (!wifiConnected) {
+    wifiConnected = false;
+    static unsigned long lastWifiRetry = 0;
+    if (now - lastWifiRetry >= 10000) { // Intentar reconectar cada 10 segundos
+      lastWifiRetry = now;
       setupWiFi();
     }
+  } else {
+    wifiConnected = true;
   }
 
   // Manejar MQTT
