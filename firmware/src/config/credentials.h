@@ -15,8 +15,8 @@
 // CONFIGURACIÓN WiFi
 // ==========================================
 // Cambiar estos valores con tus credenciales WiFi
-#define WIFI_SSID              "FLIA CUELLO PEREZ"
-#define WIFI_PASSWORD          "1006889554"
+#define WIFI_SSID              "WiFi Estudiantes"
+#define WIFI_PASSWORD          ""
 #define WIFI_MAX_ATTEMPTS      3
 #define WIFI_RETRY_DELAY       5000           // 5 segundos entre intentos
 
@@ -51,7 +51,7 @@
 // CONFIGURACIÓN API REST
 // ==========================================
 // URL del servidor backend
-#define API_BASE_URL           "http://192.168.40.8:3000/api/v1" 
+#define API_BASE_URL           "https://monitoreoaguaiot-production.up.railway.app/api/v1"
 #define API_ENDPOINT_LECTURAS  "/lecturas/lote"
 #define API_ENDPOINT_ALERTAS   "/alertas"
 #define API_ENDPOINT_COMANDOS  "/comandos-remotos"

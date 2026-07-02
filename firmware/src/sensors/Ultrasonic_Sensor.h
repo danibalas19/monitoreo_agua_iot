@@ -163,8 +163,8 @@ public:
   float readLevelMeters() {
     float levelCm = readLevel();
     if (levelCm < 0) return -1.0;
-    return levelCm / 100.0;
-  }
+    return levelCm / 200.0;
+  } 
 
   /**
    * Calibrar sensor usando distancia conocida

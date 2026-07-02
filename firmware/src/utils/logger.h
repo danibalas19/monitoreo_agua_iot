@@ -179,7 +179,7 @@ public:
     
     Serial.print("Nivel: ");
     Serial.print(reading.level, 2);
-    Serial.println(" metros");
+    Serial.println(" cm");
     
     Serial.println("==============================\n");
   }

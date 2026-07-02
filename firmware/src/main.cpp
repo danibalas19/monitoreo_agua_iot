@@ -6,6 +6,7 @@
 #include <SPIFFS.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <time.h>
 
 // Headers del firmware
 #include "config/hardware.h"
@@ -81,6 +82,23 @@ void setupWiFi() {
     logger.error("✗ No se pudo conectar a WiFi");
     wifiConnected = false;
   }
+}
+
+// ============================================
+// FUNCIONES DE TIEMPO (NTP)
+// ============================================
+void setupTime() {
+  logger.info("Sincronizando reloj por NTP...");
+  // CRÍTICO: Usar hora mundial UTC (0) para sincronizar perfectamente con la nube de Railway
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo, 15000)) { // Esperar hasta 15 segundos
+    logger.warning("⚠ Fallo al sincronizar la hora por NTP");
+    return;
+  }
+  
+  logger.info("✓ Hora local sincronizada correctamente");
 }
 
 // ============================================
@@ -193,15 +211,15 @@ void setupMQTT() {
 void updateDisplay(const SensorReading& reading) {
   lcd.clear();
   
-  // Fila 1: pH y TDS
+  // Fila 1: Nivel y Temperatura
   lcd.setCursor(0, 0);
+  lcd.print("Nvl:"); lcd.print(reading.levelPercentage, 0); lcd.print("% ");
+  lcd.print("T:"); lcd.print(reading.temperature, 1); lcd.print("C");
+  
+  // Fila 2: pH y Conductividad (TDS)
+  lcd.setCursor(0, 1);
   lcd.print("pH:"); lcd.print(reading.ph, 1);
   lcd.print(" TDS:"); lcd.print(reading.tds, 0);
-  
-  // Fila 2: Temp y Nivel
-  lcd.setCursor(0, 1);
-  lcd.print("T:"); lcd.print(reading.temperature, 1);
-  lcd.print("C Nvl:"); lcd.print(reading.levelPercentage, 0); lcd.print("%");
   
   #if LCD_ROWS > 2
   // Fila 3 y 4 (Solo se mostrará si configuras la pantalla como 20x4)
@@ -464,6 +482,9 @@ void setup() {
   
   // Inicializar WiFi
   setupWiFi();
+  
+  // Sincronizar hora de internet
+  setupTime();
   
   // Inicializar sensores
   setupSensors();

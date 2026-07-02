@@ -123,14 +123,13 @@ public:
     
     // Salvaguarda: Si la temperatura falla (-127), usamos 25°C para que el TDS no marque 0.00
     float tempForTDS = (reading.temperature <= -100.0) ? 25.0 : reading.temperature;
-    reading.tds = tdsSensor.readTDS(tempForTDS);
     
+    reading.tds = tdsSensor.readTDS(tempForTDS);                // <-- Sensor TDS reactivado con compensación térmica
     reading.turbidity = turbiditySensor.readTurbidity();        // <-- Sensor de turbidez reactivado
     reading.ph = phSensor.readPH();                             // <-- Sensor de pH reactivado
+    reading.level = ultrasonicSensor.readLevel();               // <-- Sensor de nivel reactivado
+    reading.levelPercentage = ultrasonicSensor.getLevelPercentage();
     
-    // Desactivar lectura de pines al aire para evitar datos fantasma (Ruido eléctrico)
-    reading.level = 0.0; 
-    reading.levelPercentage = 0.0; 
 
     // Validar lecturas
     if (!validateReading(reading)) {
@@ -156,12 +155,11 @@ public:
    */
   bool validateReading(const SensorReading& reading) {
     // Verificar rangos válidos
-    // Desactivado para que el fallo de la Temperatura (-127) no bloquee los demás sensores
-    // if (reading.ph < 0 || reading.ph > 14) return false;
-    // if (reading.tds < 0 || reading.tds > 5000) return false;
-    // if (reading.turbidity < 0 || reading.turbidity > 4000) return false;
-    // if (reading.temperature < -10 || reading.temperature > 60) return false;
-    // if (reading.level < 0 || reading.level > LEVEL_MAX_THRESHOLD_CM) return false;
+    if (reading.ph < 0 || reading.ph > 14) return false;
+    if (reading.tds < 0 || reading.tds > 5000) return false;
+    if (reading.turbidity < 0 || reading.turbidity > 4000) return false;
+    if (reading.temperature < -10 || reading.temperature > 60) return false;
+    if (reading.level < 0 || reading.level > LEVEL_MAX_THRESHOLD_CM) return false;
     
     return true;
   }

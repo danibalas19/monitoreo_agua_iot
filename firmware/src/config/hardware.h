@@ -21,7 +21,7 @@
 // PINES DIGITALES - SENSORES Y ACTUADORES
 // ==========================================
 // Sensor Ultrasónico HC-SR04 (NIVEL)
-#define PIN_ULTRASONIC_TRIG    GPIO_NUM_4     // Trigger del ultrasónico (ULTRASONICO)
+#define PIN_ULTRASONIC_TRIG    GPIO_NUM_16    // Trigger del ultrasónico (RX2)
 #define PIN_ULTRASONIC_ECHO    GPIO_NUM_5     // Echo del ultrasónico
 
 // Relés (MIRELE)
@@ -81,13 +81,13 @@
 #define TEMP_MAX_THRESHOLD     35.0
 
 // Nivel de Agua: centímetros - SENSOR ULTRASONICO HC-SR04
-#define LEVEL_MIN_THRESHOLD_CM    10.0        // Mínimo 10 cm de agua
-#define LEVEL_MAX_THRESHOLD_CM    500.0       // Máximo 500 cm (5 metros)
+#define LEVEL_MIN_THRESHOLD_CM    0.0         // Mínimo 0 cm de agua (recipiente vacío)
+#define LEVEL_MAX_THRESHOLD_CM    16.0        // Máximo 16 cm (profundidad de prueba)
 
 // ==========================================
 // CONFIGURACIÓN ULTRASÓNICO HC-SR04 (SENSOR DE NIVEL)
 // ==========================================
-#define ULTRASONIC_MAX_DISTANCE    400         // Máxima distancia en cm
+#define ULTRASONIC_MAX_DISTANCE    16          // Profundidad máxima en cm de la taza
 #define ULTRASONIC_MIN_DISTANCE    2           // Mínima distancia en cm
 #define ULTRASONIC_SPEED_OF_SOUND  343         // Velocidad del sonido en m/s a 20°C
 #define ULTRASONIC_SAMPLES         5           // Muestras promediadas

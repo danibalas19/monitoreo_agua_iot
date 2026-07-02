@@ -48,6 +48,17 @@ export class LecturaController {
 
   static createMultipleLecturas = asyncHandler(async (req, res) => {
     const lecturas = await LecturaService.createMultipleLecturas(req.body.lecturas);
+    
+    // Disparar la verificación de alertas en segundo plano (Auto-sanación)
+    try {
+      const { AlertaService } = await import('../services/alertaService.js');
+      if (AlertaService && typeof AlertaService.verificarUmbrales === 'function') {
+        await AlertaService.verificarUmbrales(lecturas);
+      }
+    } catch (error) {
+      logger.warn('Módulo de alertas en desarrollo (ignorado temporalmente).');
+    }
+
     res.status(201).json({
       success: true,
       data: lecturas,

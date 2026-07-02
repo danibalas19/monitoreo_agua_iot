@@ -13,7 +13,9 @@
 
 #include <Arduino.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
+#include <time.h>
 #include "../config/credentials.h"
 #include "../config/hardware.h"
 #include "../sensors/SensorController.h"
@@ -25,12 +27,37 @@ private:
   bool _isAuthenticated;
 
   /**
+   * Obtiene la hora actual formateada para MySQL
+   */
+  String getCurrentTime() {
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo, 0)) {
+      return ""; // Retorna vacío si el ESP32 no ha logrado sincronizar
+    }
+    char buffer[30];
+    // Formato exacto de base de datos SQL: YYYY-MM-DD HH:MM:SS
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+    return String(buffer);
+  }
+
+  /**
+   * Inicializa la conexión soportando tanto HTTP como HTTPS
+   */
+  bool initRequest(HTTPClient& http, WiFiClientSecure& secureClient, WiFiClient& normalClient, const String& url) {
+    http.setReuse(false);
+    if (url.startsWith("https")) {
+      secureClient.setInsecure(); // Ignora validación de certificado SSL (Ideal para Railway)
+      return http.begin(secureClient, url);
+    } else {
+      return http.begin(normalClient, url);
+    }
+  }
+
+  /**
    * Realizar petición POST para autenticación
    * @return true si se obtuvo el token
    */
   bool authenticate() {
-    HTTPClient http;
-    http.setReuse(false);
     String url = String(API_BASE_URL) + "/usuarios/auth/login";
     
     DynamicJsonDocument doc(256);
@@ -42,7 +69,11 @@ private:
     
     Serial.println("[API] Autenticando con el backend...");
     
-    if (!http.begin(url)) {
+    HTTPClient http;
+    WiFiClientSecure secureClient;
+    WiFiClient normalClient;
+    
+    if (!initRequest(http, secureClient, normalClient, url)) {
       Serial.println("[API] Error al inicializar HTTP");
       return false;
     }
@@ -120,62 +151,76 @@ public:
     doc["dispositivo_id"] = DISPOSITIVO_ID;
     doc["jaguey_id"] = JAGUEY_ID;
     
+    // Obtener la hora actual del reloj interno del ESP32
+    String currentTime = getCurrentTime();
+
     // Crear array de lecturas (una por sensor)
     JsonArray lecturas = doc.createNestedArray("lecturas");
     
-    // Lectura de pH (PH_EN)
-    JsonObject phReading = lecturas.createNestedObject();
-    phReading["dispositivo_id"] = DISPOSITIVO_ID;
-    phReading["sensor_id"] = 10;
-    phReading["tipo_variable_id"] = 3;  // pH
-    phReading["valor"] = String(reading.ph, 2);
-    phReading["unidad"] = "pH";
-    phReading["estado"] = "normal";
-    phReading["origen"] = "AUTOMATICA";
-    
-  
-
-    // Lectura de TDS (sensor de conductividad/TDS)
-    JsonObject tdsReading = lecturas.createNestedObject();
-    tdsReading["dispositivo_id"] = DISPOSITIVO_ID;
-    tdsReading["sensor_id"] = 8;         // ID 8 = TDS Meter v1.0 en BD
-    tdsReading["tipo_variable_id"] = 4;  // VERIFICAR ESTE ID EN MYSQL (Tabla tipo_variable)
-    tdsReading["valor"] = String(reading.tds, 2);
-    tdsReading["unidad"] = "ppm";
-    tdsReading["estado"] = "normal";
-    tdsReading["origen"] = "AUTOMATICA";
-    
-    // Lectura de turbidez (TURBIDEZ2)
-    JsonObject turbidityReading = lecturas.createNestedObject();
-    turbidityReading["dispositivo_id"] = DISPOSITIVO_ID;
-    turbidityReading["sensor_id"] = 9;         // ID 9 = Turbidez Module en BD
-    turbidityReading["tipo_variable_id"] = 6;  // ID 6 = Turbidez en tu BD MySQL
-    turbidityReading["valor"] = String(reading.turbidity, 2);
-    turbidityReading["unidad"] = "NTU";
-    turbidityReading["estado"] = "normal";
-    turbidityReading["origen"] = "AUTOMATICA";
-    
-    // Lectura de temperatura (TEMPERATURA DS18B20)
-    JsonObject tempReading = lecturas.createNestedObject();
-    tempReading["dispositivo_id"] = DISPOSITIVO_ID;
-    tempReading["sensor_id"] = 7;         // ID 7 = SEN0161 (Temperatura) en BD
-    tempReading["tipo_variable_id"] = 2;  // VERIFICAR ESTE ID EN MYSQL (Tabla tipo_variable)
-    tempReading["valor"] = String(reading.temperature, 2);
-    tempReading["unidad"] = "°C";
-    tempReading["estado"] = "normal";
-    tempReading["origen"] = "AUTOMATICA";
-    
-    /* === SENSORES DESCONECTADOS TEMPORALMENTE ===
-    // Lectura de nivel/distancia (ULTRASONICO HC-SR04)
+    // 1. Lectura de nivel/distancia (ULTRASONICO HC-SR04)
     JsonObject levelReading = lecturas.createNestedObject();
     levelReading["dispositivo_id"] = DISPOSITIVO_ID;
-    levelReading["sensor_id"] = 5;
+    levelReading["sensor_id"] = 11;
     levelReading["tipo_variable_id"] = 1;  // Nivel
     levelReading["valor"] = String(reading.levelPercentage, 1);
     levelReading["unidad"] = "%";
     levelReading["estado"] = "normal";
     levelReading["origen"] = "AUTOMATICA";
-    */
+    if (currentTime != "") {
+      levelReading["timestamp"] = currentTime;
+    }
+    
+    // 2. Lectura de temperatura (TEMPERATURA DS18B20)
+    JsonObject tempReading = lecturas.createNestedObject();
+    tempReading["dispositivo_id"] = DISPOSITIVO_ID;
+    tempReading["sensor_id"] = 7;         // ID 7 = Temperatura en BD
+    tempReading["tipo_variable_id"] = 2;  // Temperatura
+    tempReading["valor"] = String(reading.temperature, 2);
+    tempReading["unidad"] = "°C";
+    tempReading["estado"] = "normal";
+    tempReading["origen"] = "AUTOMATICA";
+    if (currentTime != "") {
+      tempReading["timestamp"] = currentTime;
+    }
+    
+    // 3. Lectura de pH (PH_EN)
+    JsonObject phReading = lecturas.createNestedObject();
+    phReading["dispositivo_id"] = DISPOSITIVO_ID;
+    phReading["sensor_id"] = 10;        // ID 10 = pH en BD
+    phReading["tipo_variable_id"] = 3;  // pH
+    phReading["valor"] = String(reading.ph, 2);
+    phReading["unidad"] = "pH";
+    phReading["estado"] = "normal";
+    phReading["origen"] = "AUTOMATICA";
+    if (currentTime != "") {
+      phReading["timestamp"] = currentTime;
+    }
+    
+    // 4. Lectura de TDS (sensor de conductividad/TDS)
+    JsonObject tdsReading = lecturas.createNestedObject();
+    tdsReading["dispositivo_id"] = DISPOSITIVO_ID;
+    tdsReading["sensor_id"] = 8;         // ID 8 = TDS Meter v1.0 en BD
+    tdsReading["tipo_variable_id"] = 4;  // Conductividad
+    tdsReading["valor"] = String(reading.tds, 2);
+    tdsReading["unidad"] = "ppm";
+    tdsReading["estado"] = "normal";
+    tdsReading["origen"] = "AUTOMATICA";
+    if (currentTime != "") {
+      tdsReading["timestamp"] = currentTime;
+    }
+    
+    // 6. Lectura de turbidez (TURBIDEZ2)
+    JsonObject turbidityReading = lecturas.createNestedObject();
+    turbidityReading["dispositivo_id"] = DISPOSITIVO_ID;
+    turbidityReading["sensor_id"] = 9;         // ID 9 = Turbidez Module en BD
+    turbidityReading["tipo_variable_id"] = 6;  // Turbidez
+    turbidityReading["valor"] = String(reading.turbidity, 2);
+    turbidityReading["unidad"] = "NTU";
+    turbidityReading["estado"] = "normal";
+    turbidityReading["origen"] = "AUTOMATICA";
+    if (currentTime != "") {
+      turbidityReading["timestamp"] = currentTime;
+    }
     
     String payload;
     serializeJson(doc, payload);
@@ -184,9 +229,10 @@ public:
     Serial.println(payload);
     
     HTTPClient http;
-    http.setReuse(false);
-    
-    if (!http.begin(url)) {
+    WiFiClientSecure secureClient;
+    WiFiClient normalClient;
+
+    if (!initRequest(http, secureClient, normalClient, url)) {
       Serial.println("[API] Error al inicializar HTTP");
       return false;
     }
@@ -241,9 +287,10 @@ public:
     serializeJson(doc, payload);
     
     HTTPClient http;
-    http.setReuse(false);
-    
-    if (!http.begin(url)) {
+    WiFiClientSecure secureClient;
+    WiFiClient normalClient;
+
+    if (!initRequest(http, secureClient, normalClient, url)) {
       return false;
     }
     
@@ -283,9 +330,10 @@ public:
                  "?dispositivo_id=" + String(DISPOSITIVO_ID);
     
     HTTPClient http;
-    http.setReuse(false);
-    
-    if (!http.begin(url)) {
+    WiFiClientSecure secureClient;
+    WiFiClient normalClient;
+
+    if (!initRequest(http, secureClient, normalClient, url)) {
       return false;
     }
     
@@ -324,9 +372,10 @@ public:
     String url = String(API_BASE_URL) + "/dispositivos/" + String(DISPOSITIVO_ID);
     
     HTTPClient http;
-    http.setReuse(false);
-    
-    if (!http.begin(url)) {
+    WiFiClientSecure secureClient;
+    WiFiClient normalClient;
+
+    if (!initRequest(http, secureClient, normalClient, url)) {
       return false;
     }
     
